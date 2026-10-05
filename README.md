@@ -20,23 +20,72 @@ The catalog is a common floor, not anyone's personal setup.
 
 ## Install
 
-You need Claude Code logged in with the organization's account, and Node.js
-18+ for `find-docs` and `agent-browser`.
+> **Before you start:** Claude Code, logged in with the organization's
+> account. Node.js 18+ for `find-docs` and `agent-browser`.
 
-- **Everything:** `/plugin install compassion-bundler@compassion`
-- **Only what you want:** pick in `/plugin` → **Discover**, or
-  `/plugin install <plugin>@compassion`
-- **Let your agent do it:** in a new session, say *"Set me up with the
-  compassion-agent-toolkit, following ONBOARDING.md from the
-  CompassionCH/compassion-agent-toolkit repository."*
+### 1. Choose your plugins
 
-Then restart `claude`. The first time the agent uses `agent-browser`, it
-offers to install the CLI and its Chrome.
+**🧰 Everything, in one install (recommended)**
 
-No `compassion` marketplace in `/plugin` (a machine without the
-organization's settings)? Add it with
-`/plugin marketplace add CompassionCH/compassion-agent-toolkit` and turn on
-**Enable auto-update** for it under `/plugin` → **Marketplaces**.
+```
+/plugin install compassion-bundler@compassion
+```
+
+**🎯 Or only what you want**, from `/plugin` → **Discover**, or one at a time:
+
+```
+/plugin install find-docs@compassion
+```
+
+```
+/plugin install agent-browser@compassion
+```
+
+```
+/plugin install assisted-by@compassion
+```
+
+**🤖 Or let your agent do it.** Paste this into a new Claude Code session; it
+asks before each step:
+
+```
+Set me up with the compassion-agent-toolkit, following ONBOARDING.md from the CompassionCH/compassion-agent-toolkit repository.
+```
+
+### 2. Restart Claude Code
+
+```
+/exit
+```
+
+then start `claude` again. The plugins load in the new session.
+
+### 3. Optional: log in to Context7, for `find-docs`
+
+Higher rate limits. Run it once, in a terminal:
+
+```bash
+npx ctx7@latest login
+```
+
+### 4. First use of `agent-browser`
+
+Nothing to do now: the first time the agent needs the browser, it offers to
+install the CLI and its Chrome, asking before each step.
+
+<details>
+<summary><b>No <code>compassion</code> marketplace in <code>/plugin</code>?</b> (machine without the organization's settings)</summary>
+
+Add it once:
+
+```
+/plugin marketplace add CompassionCH/compassion-agent-toolkit
+```
+
+Then turn on its updates: `/plugin` → **Marketplaces** → compassion →
+**Enable auto-update**.
+
+</details>
 
 ## Updates and changes
 
@@ -49,9 +98,13 @@ organization's settings)? Add it with
   **Disable**. The bundler's plugins stay on together: to drop one, uninstall
   the bundler first (its plugins stay installed), then the one you don't
   want.
-- **For a whole repository:** `claude plugin install <plugin>@compassion
-  --scope project`, then commit `.claude/settings.json`. Everyone opening the
-  repository is offered the plugin.
+- **For a whole repository:** run this in the repository, then commit
+  `.claude/settings.json`. Everyone opening the repository is offered the
+  plugin.
+
+  ```bash
+  claude plugin install <plugin>@compassion --scope project
+  ```
 
 ## In an Odoo repository
 
@@ -61,9 +114,9 @@ docs to that version, and `agent-browser` uses that URL.
 
 ## find-docs and Context7
 
-Context7 works without an account, at lower rate limits. For higher ones, run
-`npx ctx7@latest login` once in a terminal, or set `CONTEXT7_API_KEY`. Never
-paste a key into the chat; if you do, revoke it and make a new one.
+Context7 works without an account, at lower rate limits. For higher ones, log
+in once (install step 3) or set `CONTEXT7_API_KEY`. Never paste a key into the
+chat; if you do, revoke it and make a new one.
 `ctx7 setup` would install Context7's generic `find-docs` too: keep one,
 ideally this one, which pins Odoo versions.
 
@@ -107,10 +160,10 @@ anonymization).
 
 ## Coming from toolkit 0.3
 
-The single `compassion-agent-toolkit` plugin is retired. Install
-`compassion-bundler` to get the same tools back, and run
-`npx ctx7@latest login`: the Context7 key from the old plugin's options is no
-longer used.
+The single `compassion-agent-toolkit` plugin is retired. Follow
+[Install](#install) to get the same tools back with `compassion-bundler`. The
+Context7 key from the old plugin's options is no longer used: log in again
+(step 3).
 
 ## Feedback to Anthropic
 
