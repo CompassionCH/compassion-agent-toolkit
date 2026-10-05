@@ -35,18 +35,18 @@ auto-update**.
 
 Show them the catalog and ask which they want:
 
-- **compassion-starter**: everything below, in one install
+- **compassion-bundler**: all the Compassion plugins, in one install
 - **find-docs**: current library docs through Context7, Odoo docs pinned to
   the repository's version
 - **agent-browser**: the agent checks their local Odoo in a real Chrome
 - **assisted-by**: an `Assisted-by:` trailer on every commit the agent makes
 
-Tell them the one trade-off of the starter: while it is installed, its
+Tell them the one trade-off of the bundler: while it is installed, its
 plugins stay on together; picking plugins one by one keeps each removable on
 its own. With their yes, install their choice, for example:
 
 ```bash
-claude plugin install compassion-starter@compassion
+claude plugin install compassion-bundler@compassion
 ```
 
 If they ran `ctx7 setup` before, they already have Context7's generic

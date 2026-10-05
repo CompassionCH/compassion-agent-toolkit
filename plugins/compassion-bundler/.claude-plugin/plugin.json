@@ -1,0 +1,19 @@
+{
+  "name": "compassion-bundler",
+  "version": "1.0.0",
+  "description": "All the Compassion plugins in one install: every other plugin in this marketplace.",
+  "author": {
+    "name": "Compassion Switzerland IT"
+  },
+  "repository": "https://github.com/CompassionCH/compassion-agent-toolkit",
+  "license": "MIT",
+  "keywords": [
+    "bundle",
+    "all"
+  ],
+  "dependencies": [
+    "find-docs",
+    "agent-browser",
+    "assisted-by"
+  ]
+}

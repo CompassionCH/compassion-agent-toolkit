@@ -1,14 +1,14 @@
 {
   "name": "compassion",
-  "description": "Compassion Switzerland: optional Claude Code plugins for Odoo work. Install the ones you want, or compassion-starter for all of them.",
+  "description": "Compassion Switzerland: optional Claude Code plugins for Odoo work. Install the ones you want, or compassion-bundler for all of them.",
   "owner": {
     "name": "Compassion Switzerland IT"
   },
   "plugins": [
     {
-      "name": "compassion-starter",
-      "source": "./plugins/compassion-starter",
-      "description": "Everything below in one install: find-docs, agent-browser and assisted-by."
+      "name": "compassion-bundler",
+      "source": "./plugins/compassion-bundler",
+      "description": "All the Compassion plugins in one install: every other plugin in this marketplace."
     },
     {
       "name": "find-docs",

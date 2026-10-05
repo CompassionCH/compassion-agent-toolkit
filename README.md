@@ -15,7 +15,7 @@ It has two layers:
 
 | Plugin | What it gives you |
 |---|---|
-| `compassion-starter` | The whole catalog below in one install |
+| `compassion-bundler` | All the Compassion plugins in one install |
 | `find-docs` | Current docs for any library through Context7, and Odoo docs **pinned to your repository's version**, so the agent stops blending Odoo versions |
 | `agent-browser` | The agent opens your local Odoo in a real Chrome to check its own work: screenshots, console errors, forms |
 | `assisted-by` | Every commit the agent makes ends with `Assisted-by: <model id>, <effort>, <harness>` |
@@ -34,12 +34,12 @@ each developer grows themselves, one annoyance at a time.
 ### Everything at once
 
 ```
-/plugin install compassion-starter@compassion
+/plugin install compassion-bundler@compassion
 ```
 
-This installs and enables `find-docs`, `agent-browser` and `assisted-by`.
-While the starter is installed, its plugins stay on together: to drop one of
-them, uninstall `compassion-starter` first (the plugins it brought stay
+This installs and enables every plugin in the catalog.
+While the bundler is installed, its plugins stay on together: to drop one of
+them, uninstall `compassion-bundler` first (the plugins it brought stay
 installed), then disable or uninstall the one you don't want.
 
 ### Only what you want
@@ -87,7 +87,7 @@ still disable it for themselves.
 ### Disable or remove
 
 `/plugin` → **Installed** → the plugin → **Disable** or **Uninstall**, or
-`claude plugin disable <plugin>@compassion`. After uninstalling the starter,
+`claude plugin disable <plugin>@compassion`. After uninstalling the bundler,
 `claude plugin prune` removes the plugins it brought that nothing else uses.
 
 ---
@@ -195,7 +195,7 @@ unmanaged laptop a user can bypass them.
 
 Toolkit 0.3 was one plugin, `compassion-agent-toolkit`, installed for
 everyone. It is retired and blocked by the managed settings. To get the same
-tools back, install `compassion-starter`, or the plugins you want, as above.
+tools back, install `compassion-bundler`, or the plugins you want, as above.
 The Context7 key you entered in that plugin's **Configure options** is no
 longer used: run `npx ctx7@latest login` instead.
 
@@ -239,8 +239,8 @@ pastes the new version. Before announcing a change, try it locally with
 1. `plugins/<name>/.claude-plugin/plugin.json`, with `name`, `version` and a
    one-line `description`, plus its skills, hooks or agents beside it.
 2. An entry in `.claude-plugin/marketplace.json`, `source: "./plugins/<name>"`.
-3. Add `<name>` to `compassion-starter`'s `dependencies` and bump the
-   starter's version, when everyone benefits from it.
+3. Add `<name>` to `compassion-bundler`'s `dependencies` and bump the
+   bundler's version: the bundler holds every plugin in the catalog.
 4. A row in the table at the top of this README.
 
 One job per plugin, and each one useful on its own: that is what lets people
