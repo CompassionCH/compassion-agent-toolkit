@@ -1,0 +1,9 @@
+{
+  "name": "find-docs",
+  "version": "1.0.0",
+  "description": "Current documentation for any library through the Context7 CLI, and Odoo docs pinned to the repository's Odoo version.",
+  "author": { "name": "Compassion Switzerland IT" },
+  "repository": "https://github.com/CompassionCH/compassion-agent-toolkit",
+  "license": "MIT",
+  "keywords": ["documentation", "context7", "odoo"]
+}

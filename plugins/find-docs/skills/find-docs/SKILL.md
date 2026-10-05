@@ -18,7 +18,7 @@ Resolve once per session:
 command -v ctx7 >/dev/null && echo "use: ctx7" || echo "use: npx ctx7@latest"
 ```
 
-Examples below use `ctx7`; write `npx ctx7@latest` instead when it is not on PATH. When neither runs, the machine is not set up yet: offer `/compassion-agent-toolkit:setup`.
+Examples below use `ctx7`; write `npx ctx7@latest` instead when it is not on PATH. When neither runs, Node.js 18 or newer is missing: the user installs it the way their machine manages software (distribution package, nvm, Homebrew on macOS). A global `npm install -g ctx7` is optional and needs the user's yes; `npx` works without it.
 
 ## Workflow
 
@@ -37,7 +37,7 @@ The query ranks the results, so write it in the user's own words, one concept pe
 
 ## Odoo
 
-Odoo's API moves between versions and the model's memory blends them, so every Odoo lookup is **pinned** to the repository's version. Read the version from line one of the repo's `CLAUDE.md` (team convention) or from a `__manifest__.py` `version` (`18.0.1.0.0` → 18.0), then:
+Odoo's API moves between versions and the model's memory blends them, so every Odoo lookup is **pinned** to the repository's version. Read the version from line one of the repo's `CLAUDE.md` (team convention) or `AGENTS.md`, or from a `__manifest__.py` `version` (`18.0.1.0.0` → 18.0), then:
 
 | Repository | Where to look |
 |---|---|
@@ -49,19 +49,19 @@ An unpinned Odoo ID serves the newest branch, which is why the pin is part of ev
 
 ## Authentication
 
-The toolkit supplies the developer's own key: Claude Code keeps the plugin option `context7_api_key` in the OS keychain, and the toolkit's SessionStart hook exports it as `CONTEXT7_API_KEY` for the session. Check its state without printing it:
+Context7 works without an account, at lower rate limits. For higher ones, the user logs in once: `ctx7 login` (or `npx ctx7@latest login`). It opens a browser link with a short code and keeps the login on the machine; leave running it to the user. A `CONTEXT7_API_KEY` in the environment works too, and wins over a login. Check the state without printing a key:
 
 ```bash
-[ -n "$CONTEXT7_API_KEY" ] && echo "key: set" || echo "key: unset"
+[ -n "$CONTEXT7_API_KEY" ] && echo "key: set" || echo "key: unset"; ctx7 whoami
 ```
 
-Unset still works, at lower rate limits. To add a key: a free one at https://context7.com/dashboard, entered in `/plugin` → **Installed** → compassion-agent-toolkit → **Configure options**, then a new session. That dialog is the only place for the key; a key pasted into the chat is burned, so ask the user to revoke it on the dashboard and make a new one.
+A key pasted into the chat is burned: ask the user to revoke it at https://context7.com/dashboard and make a new one.
 
 ## Errors
 
-A quota error ("Monthly quota reached", "quota exceeded"): tell the user, then check the key state (above) and `ctx7 whoami`. No key and no login → point them to **Configure options**; either present → that account's quota is spent. If they can't authenticate, answer from training knowledge, labelled as possibly outdated. Whenever Context7 was not used, say why.
+A quota error ("Monthly quota reached", "quota exceeded"): tell the user, then check the state (above). No key and no login → suggest `ctx7 login`; either present → that account's quota is spent. If they can't authenticate, answer from training knowledge, labelled as possibly outdated. Whenever Context7 was not used, say why.
 
-`ctx7 setup` replaces this skill with Context7's generic one; leave running it to the user.
+`ctx7 setup` installs Context7's own generic `find-docs` skill next to this one, without the Odoo pinning. One of the two is enough; leave the choice to the user.
 
 ## Common mistakes
 

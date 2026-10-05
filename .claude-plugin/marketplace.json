@@ -1,14 +1,29 @@
 {
   "name": "compassion",
-  "description": "Compassion Switzerland: shared AI coding-agent toolkit for Odoo work, currently for Claude Code",
+  "description": "Compassion Switzerland: optional Claude Code plugins for Odoo work. Install the ones you want, or compassion-starter for all of them.",
   "owner": {
     "name": "Compassion Switzerland IT"
   },
   "plugins": [
     {
-      "name": "compassion-agent-toolkit",
-      "source": "./plugins/compassion-agent-toolkit",
-      "description": "Current docs through Context7, pinned to your Odoo version (find-docs), a real browser to check Odoo pages (agent-browser), a guided setup, and an Assisted-by commit trailer."
+      "name": "compassion-starter",
+      "source": "./plugins/compassion-starter",
+      "description": "Everything below in one install: find-docs, agent-browser and assisted-by."
+    },
+    {
+      "name": "find-docs",
+      "source": "./plugins/find-docs",
+      "description": "Current docs for any library through Context7, and Odoo docs pinned to your repository's Odoo version."
+    },
+    {
+      "name": "agent-browser",
+      "source": "./plugins/agent-browser",
+      "description": "A real Chrome Claude drives to check your local Odoo: screenshots, console errors, forms."
+    },
+    {
+      "name": "assisted-by",
+      "source": "./plugins/assisted-by",
+      "description": "An Assisted-by: <model id>, <effort>, claude-code trailer on every commit Claude makes."
     }
   ]
 }

@@ -20,7 +20,14 @@ Scope: local and dev instances only, with the dev database's test login. Product
 agent-browser --version
 ```
 
-Missing, or Chrome fails to start: offer `/compassion-agent-toolkit:setup`, which installs and checks it.
+Missing: show the user the install and wait for a yes before running it. It needs Node.js 18 or newer:
+
+```bash
+npm install -g agent-browser
+agent-browser install          # downloads Chrome for Testing
+```
+
+When npm answers `EACCES`, the user fixes their npm prefix or Node install the way their machine manages software; do not reach for sudo. On Linux, when Chrome fails to start over missing system libraries, the fix is `agent-browser install --with-deps`: it calls the system package manager and may need sudo, so the user runs it themselves by typing `! agent-browser install --with-deps` in the prompt.
 
 ## Core workflow
 
@@ -34,7 +41,7 @@ Missing, or Chrome fails to start: offer `/compassion-agent-toolkit:setup`, whic
 
 Refs come from the snapshot of the page as it is now: take a fresh snapshot after every navigation, and act on its refs rather than on guessed CSS selectors.
 
-The port (`8069` above) is a stand-in: each machine runs Odoo on its own host and port, written in the repo's `CLAUDE.md` or `CLAUDE.local.md`.
+The port (`8069` above) is a stand-in: each machine runs Odoo on its own host and port, written in the repo's `CLAUDE.md`, `CLAUDE.local.md` or `AGENTS.md`. Not written anywhere: ask the user.
 
 Full command reference, straight from the installed CLI: `agent-browser skills get core --full`.
 

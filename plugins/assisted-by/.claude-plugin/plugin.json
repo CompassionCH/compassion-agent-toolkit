@@ -1,0 +1,9 @@
+{
+  "name": "assisted-by",
+  "version": "1.0.0",
+  "description": "Ends every git commit Claude makes with one trailer, Assisted-by: <model id>, <effort>, claude-code, read from what Claude Code records.",
+  "author": { "name": "Compassion Switzerland IT" },
+  "repository": "https://github.com/CompassionCH/compassion-agent-toolkit",
+  "license": "MIT",
+  "keywords": ["git", "commit", "trailer", "attribution", "oca"]
+}
