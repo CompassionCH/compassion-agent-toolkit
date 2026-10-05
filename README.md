@@ -4,7 +4,7 @@ Compassion Switzerland's shared toolkit for AI coding agents on our Odoo work.
 Today it targets **Claude Code**, packaged as a Claude Code plugin marketplace.
 
 It is minimal on purpose: two tools every developer benefits from, a guided
-setup, a safety baseline for our repositories, and an honest commit trailer.
+setup, an honest commit trailer, and a few organization-wide guardrails.
 Everything else, each developer grows themselves, one annoyance at a time.
 
 | In the toolkit | What it gives you |
@@ -12,7 +12,6 @@ Everything else, each developer grows themselves, one annoyance at a time.
 | `find-docs` | Current docs for any library through Context7, and Odoo docs **pinned to your repository's version**, so the agent stops blending Odoo versions |
 | `agent-browser` | The agent opens your local Odoo in a real Chrome to check its own work: screenshots, console errors, forms |
 | `setup` | Installs and checks the two CLIs and your Context7 key, asking before each step |
-| `repo-setup` | For a repository maintainer: a `CLAUDE.md` starter and safety rules, committed once per Odoo repo |
 | Commit trailer | Every commit the agent makes ends with `Assisted-by: <model id>, <effort>, <harness>` |
 
 Deliberately not in it: anyone's personal skills, workflows or rules. The
@@ -66,21 +65,9 @@ a new one.
 
 ## In an Odoo repository
 
-A maintainer runs `/compassion-agent-toolkit:repo-setup` once per repository
-and commits the result:
-
-- **`.claude/settings.json`**: the safety baseline (never read `odoo.conf`,
-  `.odoorc`, `~/.pgpass` or `.env`; no `dropdb` or `DROP`; no force-push;
-  module upgrades and `psql` ask first), `attribution.commit: false` (no
-  `Co-Authored-By: Claude` line), and the toolkit, offered to everyone who
-  opens the repo and trusts the folder.
-- **`CLAUDE.md`**: a starter for the repository. The Odoo version goes on
-  line one: find-docs reads it to pin the docs.
-
-Rules match the command as the agent writes it: they are guardrails, not a
-vault. The real boundary stays the environment: no production credentials on
-development machines, and anonymized databases (Odoo's neutralize is not
-anonymization).
+Nothing to install per repository. Run `/init` once to draft a `CLAUDE.md`,
+correct it, and put the Odoo version on line one: find-docs reads it to pin
+the docs (it falls back to a module's `__manifest__.py`).
 
 ---
 
@@ -98,8 +85,8 @@ the values come from Claude Code rather than from the model's memory: the
 model of the exact message that made the commit (a subagent's own model
 included), and the effort level in effect, even after `/model` or `/effort`
 mid-session. Claude Code's own `Co-Authored-By` line is switched off with
-`attribution.commit: false`, which the repository settings and the managed
-settings set (a plugin cannot).
+`"attribution": {"commit": ""}`, which the managed settings set (a plugin
+cannot); without them, add it to your own `~/.claude/settings.json`.
 
 The format is fixed for analytics: `<model id>, <effort>, <harness>`, with
 the raw API model id (`claude-opus-5-5`, `claude-haiku-4-5-20251001`) and
@@ -110,7 +97,7 @@ git log --since=2026-01-01 --format='%(trailers:key=Assisted-by,valueonly,separa
   | grep . | sort | uniq -c | sort -rn
 ```
 
-Cost: one short line in the `CLAUDE.md` starter; the hook starts only for a
+Cost: nothing in context; the hook starts only for a
 command containing `git commit` (Claude Code 2.1.85+; older versions start it
 for every command and it exits at once), and it never blocks a commit. It
 covers commits the agent makes, not ones a person types.
@@ -125,23 +112,33 @@ Server-managed settings need the **Owner** role: claude.ai →
 
 - registers this marketplace and installs `compassion-agent-toolkit` for
   everyone, kept up to date;
-- turns off bypass-permissions mode (`--dangerously-skip-permissions`, which
-  skips every permission prompt) for the whole organization; auto mode stays
-  available;
-- denies reading Odoo and PostgreSQL credentials on every machine, whatever
-  the local settings say;
-- switches off Claude Code's `Co-Authored-By` commit line for everyone, so
-  only the toolkit's `Assisted-by:` remains;
-- blocks Claude Code's `/feedback` and its session survey, which would upload
-  a transcript Anthropic keeps for up to 5 years.
+- **denies** reading credentials on every machine: `odoo.conf`, `.odoorc`,
+  `~/.pgpass`, `.env`, `.env.*`;
+- **denies** force-pushes (`--force`, `-f`, `+branch`): they can overwrite
+  teammates' work on the remote. Plain pushes are allowed;
+- **asks first** before dropping a database or a table (`dropdb`, `DROP`),
+  upgrading or installing an Odoo module (`odoo-bin -u` / `-i`), and any
+  `psql`;
+- switches off Claude Code's `Co-Authored-By` commit line, so only the
+  toolkit's `Assisted-by:` remains.
 
-In the same console, **Organization settings → Data and Privacy**: consider
-turning off **Rate chats**. Thumbs-up/down feedback stores the whole
-conversation for up to 5 years and may be used for training.
+Everything else stays each developer's choice, bypass-permissions mode
+included (for a disposable VM or container).
 
-One limit to know: server-managed settings are a client-side control, not a
-security boundary. On an unmanaged laptop a user can bypass them, so they back
-up the team's habits rather than replace them.
+Rules match the command as the agent writes it: they are guardrails, not a
+vault. The real boundary stays the environment: no production credentials on
+development machines, and anonymized databases (Odoo's neutralize is not
+anonymization). Server-managed settings are also a client-side control: on an
+unmanaged laptop a user can bypass them.
+
+---
+
+## Feedback to Anthropic
+
+Feedback is welcome, and it has a cost worth knowing: `/feedback` in Claude
+Code, and thumbs up or down on claude.ai, send **the whole conversation** to
+Anthropic, kept for up to 5 years. Before sending, make sure the session holds
+no personal data, credentials or confidential code.
 
 ---
 
@@ -152,7 +149,7 @@ up the team's habits rather than replace them.
   session keeps the version it loaded and shows `Plugin updated · Run
   /reload-plugins to apply`; the next session loads it on its own. Auto-update
   is off by default for marketplaces outside Anthropic's own: the managed
-  settings and the repository settings turn it on (`autoUpdate: true`). A
+  settings turn it on (`autoUpdate: true`). A
   developer who installed by hand turns it on in `/plugin` → **Marketplaces**
   → compassion → **Enable auto-update**, or updates now with
   `claude plugin update compassion-agent-toolkit@compassion`.
@@ -169,9 +166,9 @@ claude plugin validate ./plugins/compassion-agent-toolkit  # the plugin
 **Releasing a change = bump `version` and push.** Claude Code keeps every
 install on the `version` in `plugins/compassion-agent-toolkit/.claude-plugin/plugin.json`
 until it changes: a push without a new version reaches no one. Changes to
-`templates/` reach a repository only when its maintainer runs `repo-setup`
-again. Before announcing a change,
-install it on one machine with
+`admin/managed-settings.json` reach people only once the workspace owner
+pastes the new version. Before announcing a change, install it on one machine
+with
 `claude --plugin-dir ./plugins/compassion-agent-toolkit` and run
 `/compassion-agent-toolkit:setup`.
 

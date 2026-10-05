@@ -45,9 +45,6 @@ In the repository they work on, with Claude Code started there:
 
 - no `CLAUDE.md` yet → `/init`, then correct the draft together. **The Odoo
   version goes on line one**: find-docs reads it to pin the docs.
-- `.claude/settings.json` without the team rules → point them to the
-  repository's maintainer, who runs `/compassion-agent-toolkit:repo-setup` once for
-  everyone.
 
 ## 5. Try it
 
@@ -59,3 +56,8 @@ In the repository they work on, with Claude Code started there:
 Close with the three habits: read every diff as if a colleague wrote it; give
 Claude a way to check itself (a test, the browser, the Odoo log); one task per
 session, `/clear` between tickets.
+
+One thing to tell them about feedback: `/feedback`, and thumbs up or down on
+claude.ai, send the whole conversation to Anthropic, kept for up to 5 years.
+Feedback is welcome; check the session holds no personal data or secrets
+first.

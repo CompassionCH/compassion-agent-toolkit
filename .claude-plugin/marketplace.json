@@ -8,7 +8,7 @@
     {
       "name": "compassion-agent-toolkit",
       "source": "./plugins/compassion-agent-toolkit",
-      "description": "Current docs through Context7, pinned to your Odoo version (find-docs), a real browser to check Odoo pages (agent-browser), a guided setup, and a safety baseline for our repositories."
+      "description": "Current docs through Context7, pinned to your Odoo version (find-docs), a real browser to check Odoo pages (agent-browser), a guided setup, and an Assisted-by commit trailer."
     }
   ]
 }

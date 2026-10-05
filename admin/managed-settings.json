@@ -1,6 +1,6 @@
 {
   "attribution": {
-    "commit": false
+    "commit": ""
   },
   "extraKnownMarketplaces": {
     "compassion": {
@@ -15,15 +15,31 @@
     "compassion-agent-toolkit@compassion": true
   },
   "permissions": {
-    "disableBypassPermissionsMode": "disable",
     "deny": [
       "Read(//**/odoo.conf)",
       "Read(//**/.odoorc)",
-      "Read(~/.pgpass)"
+      "Read(~/.pgpass)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f*)",
+      "Bash(git push *+*)"
+    ],
+    "ask": [
+      "Bash(*dropdb *)",
+      "Bash(*DROP DATABASE*)",
+      "Bash(*drop database*)",
+      "Bash(*DROP TABLE*)",
+      "Bash(*drop table*)",
+      "Bash(*odoo-bin *-u *)",
+      "Bash(*odoo-bin *--update*)",
+      "Bash(*odoo-bin *-i *)",
+      "Bash(*odoo-bin *--init*)",
+      "Bash(odoo *-u *)",
+      "Bash(odoo *--update*)",
+      "Bash(*psql *)"
     ]
-  },
-  "env": {
-    "DISABLE_FEEDBACK_COMMAND": "1",
-    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1"
   }
 }

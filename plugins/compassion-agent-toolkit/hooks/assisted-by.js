@@ -9,7 +9,7 @@
 // harness. The values come from what Claude Code records,
 // never from the model's memory: the model from the session transcript
 // (the assistant message holding this tool call, in the session's or a
-// subagent's transcript; else the model SessionStart received), the effort from the hook
+// subagent's transcript), the effort from the hook
 // input's `effort.level` (CLAUDE_EFFORT as a fallback).
 // The trailer goes right after the first `git commit` in the command, so chained
 // commands (`git add … && git commit …`) and heredoc messages keep working.
@@ -85,13 +85,6 @@ function transcriptModel(transcriptPath, toolUseId) {
   return latest
 }
 
-// The model SessionStart received, saved by session-start.sh.
-function sessionStartModel(sessionId) {
-  const dir = process.env.CLAUDE_PLUGIN_DATA
-  if (!dir || !sessionId) return null
-  try { return fs.readFileSync(path.join(dir, 'model-' + sessionId), 'utf8').trim() || null } catch { return null }
-}
-
 let raw = ''
 process.stdin.on('data', (c) => { raw += c })
 process.stdin.on('end', () => {
@@ -101,8 +94,7 @@ process.stdin.on('end', () => {
     if (typeof command !== 'string' || !/\bgit\s+commit(?=\s|$|;|&|\|)/.test(command)) return
     if (/Assisted-by:/i.test(command)) return
 
-    const model = transcriptModel(input.transcript_path, input.tool_use_id)
-      || sessionStartModel(input.session_id) || 'unknown'
+    const model = transcriptModel(input.transcript_path, input.tool_use_id) || 'unknown'
     const effort = (input.effort && input.effort.level) || process.env.CLAUDE_EFFORT || 'unknown'
     const trailer = `Assisted-by: ${model}, ${effort}, claude-code`
     const updated = command.replace(/\bgit(\s+)commit(?=\s|$|;|&|\|)/, `git$1commit --trailer "${trailer}"`)
