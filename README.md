@@ -70,7 +70,7 @@ A maintainer runs `/compassion-agent-toolkit:repo-setup` once per repository
 and commits the result:
 
 - **`.claude/settings.json`**: the safety baseline (never read `odoo.conf`,
-  `.odoorc`, `~/.pgpass` or `.env`; no `dropdb` or `DROP`; no `git push`;
+  `.odoorc`, `~/.pgpass` or `.env`; no `dropdb` or `DROP`; no force-push;
   module upgrades and `psql` ask first), `attribution.commit: false` (no
   `Co-Authored-By: Claude` line), and the toolkit, offered to everyone who
   opens the repo and trusts the folder.

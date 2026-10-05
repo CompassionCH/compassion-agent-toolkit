@@ -18,7 +18,7 @@ Done when you can name the version and the addon folders.
 
 Merge `${CLAUDE_PLUGIN_ROOT}/templates/settings.json` into the repository's `.claude/settings.json`, creating it if absent. Merging keeps every existing key and rule and adds what is missing: the `attribution` setting, the `permissions.deny` and `permissions.ask` rules, the `extraKnownMarketplaces` entry and the `enabledPlugins` entry.
 
-Show the resulting file as a diff and wait for the maintainer's yes before writing it. Walk them through each rule in one line, so the team's choices are deliberate: `git push` is denied in the baseline because pushes stay human; they may drop that line. `attribution.commit: false` removes Claude Code's `Co-Authored-By` line: the toolkit's hook adds the `Assisted-by:` trailer instead.
+Show the resulting file as a diff and wait for the maintainer's yes before writing it. Walk them through each rule in one line, so the team's choices are deliberate: Force-pushes are denied in the baseline because they can overwrite teammates' work on the remote; plain pushes are allowed. `attribution.commit: false` removes Claude Code's `Co-Authored-By` line: the toolkit's hook adds the `Assisted-by:` trailer instead.
 
 ## 3. Instructions: `CLAUDE.md`
 

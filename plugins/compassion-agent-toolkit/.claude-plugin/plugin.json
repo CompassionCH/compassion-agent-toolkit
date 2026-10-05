@@ -1,6 +1,6 @@
 {
   "name": "compassion-agent-toolkit",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Compassion Switzerland's agent toolkit for Odoo: find-docs (Context7, your own key), agent-browser, a guided setup, a repository safety baseline, and an Assisted-by commit trailer.",
   "author": {
     "name": "Compassion Switzerland IT"

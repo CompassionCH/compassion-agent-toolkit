@@ -11,7 +11,7 @@ Odoo {{VERSION}}. {{One line: what this repository holds and who uses it.}}
 
 ## Conventions
 - {{Views: `<list>`, not `<tree>`; `invisible="…"` expressions, not `attrs`. (Odoo 17+; adapt for older versions.)}}
-- Commit messages: `[FIX] module: what changed` (OCA style). Claude may commit on a branch; a hook adds the `Assisted-by:` trailer, so add none yourself. People push.
+- Commit messages: `[FIX] module: what changed` (OCA style). Claude may commit on a branch; a hook adds the `Assisted-by:` trailer, so add none yourself. Push the branch when asked; never force-push.
 - Framework and library questions go through find-docs, pinned to Odoo {{VERSION}}.
 
 ## Data
