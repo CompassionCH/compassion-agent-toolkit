@@ -9,7 +9,7 @@ Everything else, each developer grows themselves, one annoyance at a time.
 
 | In the toolkit | What it gives you |
 |---|---|
-| `find-docs` | Current docs for any library through Context7, and Odoo docs **pinned to your repository's version**, so the agent stops blending Odoo 14 and 18 |
+| `find-docs` | Current docs for any library through Context7, and Odoo docs **pinned to your repository's version**, so the agent stops blending Odoo versions |
 | `agent-browser` | The agent opens your local Odoo in a real Chrome to check its own work: screenshots, console errors, forms |
 | `setup` | Installs and checks the two CLIs and your Context7 key, asking before each step |
 | `repo-setup` | For a repository maintainer: a `CLAUDE.md` starter and safety rules, committed once per Odoo repo |
@@ -125,7 +125,9 @@ Server-managed settings need the **Owner** role: claude.ai →
 
 - registers this marketplace and installs `compassion-agent-toolkit` for
   everyone, kept up to date;
-- turns off bypass-permissions mode for the whole organization;
+- turns off bypass-permissions mode (`--dangerously-skip-permissions`, which
+  skips every permission prompt) for the whole organization; auto mode stays
+  available;
 - denies reading Odoo and PostgreSQL credentials on every machine, whatever
   the local settings say;
 - switches off Claude Code's `Co-Authored-By` commit line for everyone, so
