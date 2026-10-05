@@ -1,0 +1,29 @@
+{
+  "attribution": {
+    "commit": false
+  },
+  "extraKnownMarketplaces": {
+    "compassion": {
+      "source": {
+        "source": "github",
+        "repo": "CompassionCH/compassion-agent-toolkit"
+      },
+      "autoUpdate": true
+    }
+  },
+  "enabledPlugins": {
+    "compassion-agent-toolkit@compassion": true
+  },
+  "permissions": {
+    "disableBypassPermissionsMode": "disable",
+    "deny": [
+      "Read(//**/odoo.conf)",
+      "Read(//**/.odoorc)",
+      "Read(~/.pgpass)"
+    ]
+  },
+  "env": {
+    "DISABLE_FEEDBACK_COMMAND": "1",
+    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1"
+  }
+}

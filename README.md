@@ -1,0 +1,168 @@
+# compassion-agent-toolkit
+
+Compassion Switzerland's shared toolkit for AI coding agents on our Odoo work.
+Today it targets **Claude Code**, packaged as a Claude Code plugin marketplace.
+
+It is minimal on purpose: two tools every developer benefits from, a guided
+setup, a safety baseline for our repositories, and an honest commit trailer.
+Everything else, each developer grows themselves, one annoyance at a time.
+
+| In the toolkit | What it gives you |
+|---|---|
+| `find-docs` | Current docs for any library through Context7, and Odoo docs **pinned to your repository's version**, so the agent stops blending Odoo 14 and 18 |
+| `agent-browser` | The agent opens your local Odoo in a real Chrome to check its own work: screenshots, console errors, forms |
+| `setup` | Installs and checks the two CLIs and your Context7 key, asking before each step |
+| `repo-setup` | For a repository maintainer: a `CLAUDE.md` starter and safety rules, committed once per Odoo repo |
+| Commit trailer | Every commit the agent makes ends with `Assisted-by: <model id>, <effort>, <harness>` |
+
+Deliberately not in it: anyone's personal skills, workflows or rules. The
+toolkit is the common floor, not a copy of one person's setup.
+
+---
+
+## Install
+
+**Prerequisites:** Claude Code, logged in with your organization's account;
+Node.js 18 or newer; a free Context7 API key of your own from
+<https://context7.com/dashboard> (optional, for higher rate limits).
+
+### A. Automatic, once the workspace owner has enabled it (preferred)
+
+The workspace owner adds the toolkit to the organization's managed settings
+(see [For the workspace owner](#for-the-workspace-owner)). Your next Claude
+Code session installs it by itself. Then:
+
+1. `/plugin` → **Installed** → compassion-agent-toolkit → **Configure options**
+   → paste your Context7 key (masked, stored in your OS keychain).
+2. `/exit`, start `claude` again, and run `/compassion-agent-toolkit:setup`.
+
+### B. By hand
+
+In a Claude Code session:
+
+```
+/plugin marketplace add CompassionCH/compassion-agent-toolkit
+/plugin install compassion-agent-toolkit@compassion
+```
+
+The install asks for your Context7 key. Then `/exit`, `claude`, and
+`/compassion-agent-toolkit:setup`.
+
+### C. Let your agent do it
+
+Paste this into a new Claude Code session:
+
+> Set me up with the compassion-agent-toolkit, following ONBOARDING.md from
+> the CompassionCH/compassion-agent-toolkit repository.
+
+[`ONBOARDING.md`](ONBOARDING.md) walks the agent through the same steps,
+asking you before each one.
+
+**Your key goes only in the Configure options dialog**, never in the chat. A
+key pasted into a conversation is burned: revoke it on the dashboard and make
+a new one.
+
+---
+
+## In an Odoo repository
+
+A maintainer runs `/compassion-agent-toolkit:repo-setup` once per repository
+and commits the result:
+
+- **`.claude/settings.json`**: the safety baseline (never read `odoo.conf`,
+  `.odoorc`, `~/.pgpass` or `.env`; no `dropdb` or `DROP`; no `git push`;
+  module upgrades and `psql` ask first), `attribution.commit: false` (no
+  `Co-Authored-By: Claude` line), and the toolkit, offered to everyone who
+  opens the repo and trusts the folder.
+- **`CLAUDE.md`**: a starter for the repository. The Odoo version goes on
+  line one: find-docs reads it to pin the docs.
+
+Rules match the command as the agent writes it: they are guardrails, not a
+vault. The real boundary stays the environment: no production credentials on
+development machines, and anonymized databases (Odoo's neutralize is not
+anonymization).
+
+---
+
+## The commit trailer
+
+Every `git commit` the agent runs gets one trailer, for example:
+
+```
+Assisted-by: claude-opus-5-5, high, claude-code
+```
+
+It says AI helped while a human stays the author, in line with the OCA's AI
+policy. A hook adds it, so it does not depend on the agent remembering, and
+the values come from Claude Code rather than from the model's memory: the
+model of the exact message that made the commit (a subagent's own model
+included), and the effort level in effect, even after `/model` or `/effort`
+mid-session. Claude Code's own `Co-Authored-By` line is switched off with
+`attribution.commit: false`, which the repository settings and the managed
+settings set (a plugin cannot).
+
+The format is fixed for analytics: `<model id>, <effort>, <harness>`, with
+the raw API model id (`claude-opus-5-5`, `claude-haiku-4-5-20251001`) and
+`unknown` for a value Claude Code did not record. To count them:
+
+```bash
+git log --since=2026-01-01 --format='%(trailers:key=Assisted-by,valueonly,separator=)' \
+  | grep . | sort | uniq -c | sort -rn
+```
+
+Cost: one short line in the `CLAUDE.md` starter; the hook starts only for a
+command containing `git commit` (Claude Code 2.1.85+; older versions start it
+for every command and it exits at once), and it never blocks a commit. It
+covers commits the agent makes, not ones a person types.
+
+---
+
+## For the workspace owner
+
+Server-managed settings need the **Owner** role: claude.ai →
+**Admin settings → Claude Code → Managed settings**. Paste
+[`admin/managed-settings.json`](admin/managed-settings.json). It:
+
+- registers this marketplace and installs `compassion-agent-toolkit` for
+  everyone, kept up to date;
+- turns off bypass-permissions mode for the whole organization;
+- denies reading Odoo and PostgreSQL credentials on every machine, whatever
+  the local settings say;
+- switches off Claude Code's `Co-Authored-By` commit line for everyone, so
+  only the toolkit's `Assisted-by:` remains;
+- blocks Claude Code's `/feedback` and its session survey, which would upload
+  a transcript Anthropic keeps for up to 5 years.
+
+In the same console, **Organization settings → Data and Privacy**: consider
+turning off **Rate chats**. Thumbs-up/down feedback stores the whole
+conversation for up to 5 years and may be used for training.
+
+One limit to know: server-managed settings are a client-side control, not a
+security boundary. On an unmanaged laptop a user can bypass them, so they back
+up the team's habits rather than replace them.
+
+---
+
+## Update and remove
+
+- **Update**: automatic with the managed settings above; otherwise `/plugin`
+  → **Marketplaces** → compassion → **Update**.
+- **Remove**: `/plugin` → **Installed** → compassion-agent-toolkit →
+  **Uninstall** (a managed install can only be removed by the owner).
+
+## Maintaining the toolkit
+
+```bash
+claude plugin validate .                                   # the marketplace
+claude plugin validate ./plugins/compassion-agent-toolkit  # the plugin
+```
+
+Bump `version` in `plugins/compassion-agent-toolkit/.claude-plugin/plugin.json`
+with every change, so installs see an update. Before announcing a change,
+install it on one machine with
+`claude --plugin-dir ./plugins/compassion-agent-toolkit` and run
+`/compassion-agent-toolkit:setup`.
+
+## License
+
+MIT, see [LICENSE](LICENSE).

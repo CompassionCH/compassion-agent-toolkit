@@ -1,0 +1,14 @@
+{
+  "name": "compassion",
+  "description": "Compassion Switzerland: shared AI coding-agent toolkit for Odoo work, currently for Claude Code",
+  "owner": {
+    "name": "Compassion Switzerland IT"
+  },
+  "plugins": [
+    {
+      "name": "compassion-agent-toolkit",
+      "source": "./plugins/compassion-agent-toolkit",
+      "description": "Current docs through Context7, pinned to your Odoo version (find-docs), a real browser to check Odoo pages (agent-browser), a guided setup, and a safety baseline for our repositories."
+    }
+  ]
+}
