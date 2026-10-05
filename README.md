@@ -25,13 +25,13 @@ The catalog is a common floor, not anyone's personal setup.
 
 ### 1. Choose your plugins
 
-**🧰 Everything, in one install (recommended)**
+**Everything, in one install (recommended)**
 
 ```
 /plugin install compassion-bundler@compassion
 ```
 
-**🎯 Or only what you want**, from `/plugin` → **Discover**, or one at a time:
+**Or only what you want**, from `/plugin` → **Discover**, or one at a time:
 
 ```
 /plugin install find-docs@compassion
@@ -45,7 +45,7 @@ The catalog is a common floor, not anyone's personal setup.
 /plugin install assisted-by@compassion
 ```
 
-**🤖 Or let your agent do it.** Paste this into a new Claude Code session; it
+**Or let your agent do it.** Paste this into a new Claude Code session; it
 asks before each step:
 
 ```
