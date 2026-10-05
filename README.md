@@ -113,7 +113,9 @@ Server-managed settings need the **Owner** role: claude.ai →
 - registers this marketplace and installs `compassion-agent-toolkit` for
   everyone, kept up to date;
 - **denies** reading credentials on every machine: `odoo.conf`, `.odoorc`,
-  `~/.pgpass`, `.env`, `.env.*`;
+  `~/.pgpass`, `.env`, `.env.*`, and private keys (`~/.ssh/id_*` without
+  `.pub`, `*.pem`, `*.key`). `~/.ssh/config` and public keys stay readable;
+  a key with a custom name needs its own rule;
 - **denies** force-pushes (`--force`, `-f`, `+branch`): they can overwrite
   teammates' work on the remote. Plain pushes are allowed;
 - **asks first** before dropping a database or a table (`dropdb`, `DROP`),
