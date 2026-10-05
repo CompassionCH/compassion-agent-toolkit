@@ -36,7 +36,8 @@
       "source": {
         "source": "github",
         "repo": "CompassionCH/compassion-agent-toolkit"
-      }
+      },
+      "autoUpdate": true
     }
   },
   "enabledPlugins": {

@@ -147,8 +147,15 @@ up the team's habits rather than replace them.
 
 ## Update and remove
 
-- **Update**: automatic with the managed settings above; otherwise `/plugin`
-  → **Marketplaces** → compassion → **Update**.
+- **Update**: with auto-update on, Claude Code checks this marketplace when a
+  session starts and downloads a newer version in the background. The open
+  session keeps the version it loaded and shows `Plugin updated · Run
+  /reload-plugins to apply`; the next session loads it on its own. Auto-update
+  is off by default for marketplaces outside Anthropic's own: the managed
+  settings and the repository settings turn it on (`autoUpdate: true`). A
+  developer who installed by hand turns it on in `/plugin` → **Marketplaces**
+  → compassion → **Enable auto-update**, or updates now with
+  `claude plugin update compassion-agent-toolkit@compassion`.
 - **Remove**: `/plugin` → **Installed** → compassion-agent-toolkit →
   **Uninstall** (a managed install can only be removed by the owner).
 
@@ -159,8 +166,11 @@ claude plugin validate .                                   # the marketplace
 claude plugin validate ./plugins/compassion-agent-toolkit  # the plugin
 ```
 
-Bump `version` in `plugins/compassion-agent-toolkit/.claude-plugin/plugin.json`
-with every change, so installs see an update. Before announcing a change,
+**Releasing a change = bump `version` and push.** Claude Code keeps every
+install on the `version` in `plugins/compassion-agent-toolkit/.claude-plugin/plugin.json`
+until it changes: a push without a new version reaches no one. Changes to
+`templates/` reach a repository only when its maintainer runs `repo-setup`
+again. Before announcing a change,
 install it on one machine with
 `claude --plugin-dir ./plugins/compassion-agent-toolkit` and run
 `/compassion-agent-toolkit:setup`.
