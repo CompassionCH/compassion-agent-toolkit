@@ -18,7 +18,7 @@ Resolve once per session:
 command -v ctx7 >/dev/null && echo "use: ctx7" || echo "use: npx ctx7@latest"
 ```
 
-Examples below use `ctx7`; write `npx ctx7@latest` instead when it is not on PATH. When neither runs, Node.js 18 or newer is missing: the user installs it the way their machine manages software (distribution package, nvm, Homebrew on macOS). A global `npm install -g ctx7` is optional and needs the user's yes; `npx` works without it.
+Examples below use `ctx7`; write `npx ctx7@latest` instead when it is not on PATH. When neither runs, Node.js 22.13 or newer is missing: the user installs it the way their machine manages software (distribution package, nvm, Homebrew on macOS). A global `npm install -g ctx7` is optional and needs the user's yes; `npx` works without it.
 
 ## Workflow
 

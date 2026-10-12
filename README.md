@@ -21,7 +21,10 @@ The catalog is a common floor, not anyone's personal setup.
 ## Install
 
 > **Before you start:** Claude Code, logged in with the organization's
-> account. Node.js 18+ for `find-docs` and `agent-browser`.
+> account. Node.js 22.13 or newer for `find-docs`, `agent-browser` and
+> `assisted-by`, and npm for the first two (on Debian and Ubuntu, npm is a
+> package of its own). Without them, each of these plugins warns when a
+> session starts.
 
 ### 1. Choose your plugins
 

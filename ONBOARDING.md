@@ -14,10 +14,12 @@ developer has chosen to stop.
 - `claude --version` runs, and the session is logged in with the Compassion
   Team account (the developer can check with `/status`; `/login` switches
   account).
-- `node --version` shows 18 or newer; `find-docs` and `agent-browser` need it.
-  Older or missing: the developer installs Node.js the way their machine
-  manages software; offer the usual options (distribution package, nvm,
-  Homebrew on macOS) and let them choose.
+- `node --version` shows 22.13 or newer and `npm --version` runs. `find-docs`
+  needs both (Node 22.13+), `agent-browser` both (Node 18+), `assisted-by`
+  Node 18+ only. Older or missing: the developer installs Node.js the way
+  their machine manages software; offer the usual options (distribution
+  package, nvm, Homebrew on macOS) and let them choose. On Debian and Ubuntu,
+  npm is a package of its own.
 
 ## 2. The marketplace
 

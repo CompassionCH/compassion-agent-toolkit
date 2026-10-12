@@ -1,6 +1,6 @@
 {
   "name": "agent-browser",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Claude drives a real Chrome through the agent-browser CLI to check a local Odoo: screenshots, console errors, forms.",
   "author": { "name": "Compassion Switzerland IT" },
   "repository": "https://github.com/CompassionCH/compassion-agent-toolkit",
