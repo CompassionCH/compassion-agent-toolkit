@@ -34,20 +34,6 @@
       "Bash(git push * --force*)",
       "Bash(git push * -f*)",
       "Bash(git push *+*)"
-    ],
-    "ask": [
-      "Bash(*dropdb *)",
-      "Bash(*DROP DATABASE*)",
-      "Bash(*drop database*)",
-      "Bash(*DROP TABLE*)",
-      "Bash(*drop table*)",
-      "Bash(*odoo-bin *-u *)",
-      "Bash(*odoo-bin *--update*)",
-      "Bash(*odoo-bin *-i *)",
-      "Bash(*odoo-bin *--init*)",
-      "Bash(odoo *-u *)",
-      "Bash(odoo *--update*)",
-      "Bash(*psql *)"
     ]
   }
 }

@@ -153,8 +153,6 @@ Paste [`admin/managed-settings.json`](admin/managed-settings.json) in claude.ai
 - **denies** reading credentials: `odoo.conf`, `.odoorc`, `~/.pgpass`, `.env*`,
   private SSH keys, `*.pem`, `*.key`;
 - **denies** force-pushes; plain pushes stay allowed;
-- **asks first** before `dropdb`, `DROP DATABASE/TABLE`, `odoo-bin -u/-i` and
-  `psql`;
 - switches off Claude Code's `Co-Authored-By` line.
 
 These rules are guardrails, not a vault: keep production credentials off
