@@ -38,7 +38,8 @@
 A job can hold several objects of one partner (children, sponsorships, letters). A text written for one object must not silently use the first:
 - `lifecycle = child.mapped('lifecycle_ids')[:1]` and one `reason` for all children: use a list "<child>: <reason>" when `not one_child`, skip children without a reason, and set `good_reason` / `hopes` only when `one_child`.
 - A condition about the **letter** (`has_sub`) must read the letter's own records: `letter.mapped('sponsorship_id.sub_sponsorship_id.state')`, not every sponsorship of the child.
-- `child[:1].age`, `field = child[:1].field_office_id`: say it when the objects can differ (country, age).
+- Figures built from the first object (`sponsorships[:1].contract_duration`, `child[:1].field_office_id`, `child[:1].age`: hours at the centre, meals, medical check-ups, "able to go to school"): show them only when `one_child` (`<p t-if="one_child">`) and give grouped letters a shorter generic paragraph (`<p t-else="">`). Avoid a preposition before `name` in the generic text: its fallback ("your children", "i tuoi figlioli") breaks Italian "di i tuoi"; use an accusative construction ("ha accompagnato <name>").
+- `field.country_id` (the country of the first child) in a sentence about all children: leave the country out of the grouped branch.
 Add the list branch for each language with the existing vocabulary (*parrainages*, *Patenschaften*, *sostegni*) and ask the user to read the three translations.
 
 ## Optional fields
