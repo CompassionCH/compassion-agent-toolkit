@@ -133,7 +133,11 @@ It writes `<config name>_<EN|FR|DE|IT>.html` from the database, byte for byte. T
 - `refresh_text` on a physical job took about 66 s (two PDF renders); see `reference/rules.md`, Pitfalls.
 - Other templates still call `get_date` with legacy keys (ids 46, 93, 96, 127, 132 in the T3527 database).
 
-## 12. Checklist before the PR
+## 12. Progress table
+
+The last section of this guide lists every template of an active communication config with its status (`Todo` / `Done`) and the ticket. Pick the next templates there, and mark each one `Done` with your ticket once it is in the database and synced to the code. The skill does it for you when it can reach the document (`reference/progress-table.md`); otherwise edit the table by hand. A template shared by several configs has one row per config: mark all of them.
+
+## 13. Checklist before the PR
 
 - [ ] every template of the ticket loaded, cleaned and accepted in the four languages
 - [ ] database updated, backups kept
@@ -142,4 +146,5 @@ It writes `<config name>_<EN|FR|DE|IT>.html` from the database, byte for byte. T
 - [ ] migrations added (post-migration reload, pre-migration link if needed), versions bumped
 - [ ] migration run on a copy, `compare_databases.py` clean, texts rendered
 - [ ] comm-rules repository updated (if used)
+- [ ] progress table updated (`Done` and the ticket on every row of the templates)
 - [ ] draft PRs opened, linked to each other, ticket number in the title, review comments answered

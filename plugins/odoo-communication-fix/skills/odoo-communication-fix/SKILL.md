@@ -22,6 +22,7 @@ Method used for T3527 (B2S letters, planned and unplanned exit, birthday reminde
 | `TEMPLATES` | The ids/names of the mail.template records to fix, given by the user, one at a time | scope |
 | `SCRATCH` | The scratch file the user works in (PyCharm scratches folder). Ask which file | working copy |
 | `LANGS` | `en_US`, `fr_CH`, `de_DE`, `it_IT`. The user chooses the order (usually the one he is fixing first) | loop |
+| `PROGRESS_TABLE` | The Claude Docs table that lists every template of an active config and its status (`reference/progress-table.md`). Read it to see what is `Todo`, and update it at the end of each template | scope, tracking |
 | `COMM_RULES_REPO` | Optional: the repository with one HTML file per config and language (`~/Dev/comm-rules`) | section 8 |
 
 Create the branch in each repo (`git checkout -b <BRANCH>` from a clean `18.0`). Never touch the `odoo.conf` Connect settings (stage stays active) and do not read `odoo.conf` (it holds credentials): pass `-c odoo.conf` to Odoo without opening it.
@@ -29,6 +30,8 @@ Create the branch in each repo (`git checkout -b <BRANCH>` from a clean `18.0`).
 Ask permission **each time** you run Odoo or a test. Reading with `psql` is fine; writing to the database only when the user asked for it for that template.
 
 ## 1. Map each template to its source
+
+First read the progress table (`reference/progress-table.md`): it lists every template of an active config with `Todo` / `Done`. Propose the `Todo` templates to the user, or take the ones he gives, and skip the `Done` ones unless he asks to redo them.
 
 ```sql
 select t.id, t.name->>'en_US', d.module||'.'||d.name
@@ -68,6 +71,7 @@ The database works because every module is installed. The code must also work wh
 4. New xmlid: change the config record that must use it (`email_template_id ref=...`).
 5. In the XML records, also set `email_from`, `reply_to`, `partner_to` to the database values (the script does not sync them), otherwise the reload (section 6) overwrites the working values with the old `${}` Mako text.
 6. Verify: the XML bodies match the database bodies ignoring whitespace; `pre-commit run --files <changed files>` in each repo (new `.po` entries need `#. module: <module>`).
+7. Update the progress table: `Done` and the ticket on every row with that template id (`reference/progress-table.md`). Do it once the template is in the database and synced, not before.
 
 ## 5. Code fixes that came with it (check them first on a new task)
 
@@ -111,5 +115,6 @@ Ask permission, then on the **copy** only:
 - `scripts/compare_databases.py`: reference database against the migrated test database.
 - `scripts/export_to_repo.py`: database to the comm-rules HTML files.
 - `templates/`: example `templates.json`, migration models, rendering test model.
+- `reference/progress-table.md`: the progress table (where it is, how to read and update it).
 - `reference/rules.md`: automatic rules, proposal categories, language and wording rules, pitfalls.
 - `reference/how-to-report.md`: step by step guide for another developer.
