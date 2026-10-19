@@ -135,7 +135,7 @@ It writes `<config name>_<EN|FR|DE|IT>.html` from the database, byte for byte. T
 
 ## 12. Progress table
 
-The last section of this guide lists every template of an active communication config with its status (`Todo` / `Done`) and the ticket. Pick the next templates there, and mark each one `Done` with your ticket once it is in the database and synced to the code. The skill does it for you when it can reach the document (`reference/progress-table.md`); otherwise edit the table by hand. A template shared by several configs has one row per config: mark all of them.
+The last section of this guide lists every template of an active communication config with its status (`Todo` / `Done`) and the ticket. The table is sorted by usage (communication jobs created in the last 12 months, highest first), so start at the top. Pick the next templates there, and mark each one `Done` with your ticket once it is in the database and synced to the code. The skill does it for you when it can reach the document (`reference/progress-table.md`); otherwise edit the table by hand. A template shared by several configs has one row per config: mark all of them.
 
 ## 13. Checklist before the PR
 
