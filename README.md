@@ -15,7 +15,7 @@ for **Claude Code**. Two layers:
 | `find-docs` | Current docs for any library through Context7, and Odoo docs **pinned to your repository's version** |
 | `agent-browser` | The agent checks its work in your local Odoo through a real Chrome: screenshots, console errors, forms |
 | `assisted-by` | Every commit the agent makes ends with `Assisted-by: <model id>, <effort>, <harness>` |
-| `odoo-communication-fix` | Fixes the Compassion communication e-mails in four languages: cleans each text, writes it back to the database, syncs the XML and `.po` files, adds the migrations, opens draft PRs |
+| `odoo-communication-fix` | Fixes the Compassion communication e-mails in four languages: cleans each text, writes it back to the database, checks the fields used outside the module's dependencies, syncs the XML and `.po` files, adds and verifies the migrations, opens draft PRs |
 
 The catalog is a common floor, not anyone's personal setup.
 

@@ -23,9 +23,9 @@ The skill asks for these values and never reuses the ones of a previous task.
 | Ticket number | `T3527` | first in the commit messages and the PR |
 | Database | `swiss18` | a copy you can write to, never production |
 | Branch | `T3527-fix-communication-rules` | one per repo; feature branch, not `18.0` |
-| Repos | `compassion-modules`, `compassion-website`, `compassion-switzerland` | under `~/Dev/18-addons/` |
+| Repos | `compassion-modules`, `compassion-website`, `compassion-switzerland` |
 | Templates | `56` B2S New letter, `449` B2S Final Letter, ... | ids given one by one |
-| Scratch file | a PyCharm scratch `.html` | the working copy you edit |
+| Scratch file | a local scratch file `.html` | the working copy you edit |
 
 Check first: git is clean on `18.0` in every repo, Odoo 18 and `psql` access to the database work, `pre-commit`, `polib`, `psycopg2`, `lxml` and `gh` (SSH) are installed.
 
@@ -54,7 +54,19 @@ All the rules are in `reference/rules.md`. The ones that surprise people:
 - Glossary: *Patenschaft* (de), *sostegno* only (it), *parrainage* (fr).
 - Gender and agreement lookups (`child.get('he')`...) are accepted; do not touch or discuss them.
 
-## 5. Sync to the code
+## 5. Check the texts for other environments
+
+Your database works because every module is installed. The code must also work in a fresh install, in CI and for Nordic, which shares `compassion-modules` but not the Swiss modules.
+
+1. Run the dependency check on the module that ships the templates:
+   ```
+   python3 $SKILL/scripts/check_dependencies.py --module partner_communication_compassion --xml data/child_letter_emails.xml data/depart_communications.xml
+   ```
+   It lists the fields and methods used by the templates that are defined only outside the module's dependencies. `UNGUARDED` lines must be handled; the exit code is 1 if there are some.
+2. Guard them in the database text (then sync), without adding a dependency: `x.field if 'field' in x._fields else <fallback>`. T3527 needed it for `commercial_name` (sender), `short_signature` (signature), both from `report_compassion`, and `success_sentence` (from `thankyou_letters`).
+3. Look for texts written for one object when a job holds several (the first child's reason used for all children, a condition on every sponsorship of a child instead of the letter's own). `reference/rules.md` ("Several objects") shows the fix.
+
+## 6. Sync to the code
 
 1. Write `templates.json` (see `templates/templates.example.json`): template id, module, xmlid, XML file, `i18n` folder.
 2. Dry run, then real run:
@@ -62,39 +74,72 @@ All the rules are in `reference/rules.md`. The ones that surprise people:
    python3 $SKILL/scripts/sync_to_code.py --db <DB> --config templates.json --dry-run
    python3 $SKILL/scripts/sync_to_code.py --db <DB> --config templates.json
    ```
-   Add `--create-missing` for a template that has no record in the XML yet (a template imported by hand has the xmlid `__import__.NN`).
-3. Point the matching `partner.communication.config` record at the new xmlid.
-4. Check: the XML bodies equal the database bodies (ignoring whitespace), the `.po` entries equal the database, `pre-commit run --files <files>` passes in each repo (a new `.po` entry needs `#. module: <module>`).
+   Add `--create-missing` for a template that has no record in the XML yet (a template imported by hand has the xmlid `__import__.NN`). A second dry run must change nothing.
+3. Set `email_from`, `reply_to`, `partner_to` of the XML records to the database values by hand (the script syncs the subject and the body only).
+4. Point the matching `partner.communication.config` record at a new xmlid, if you created one.
+5. Check: the XML bodies equal the database bodies (ignoring whitespace), `pre-commit run --files <files>` passes in each repo (a new `.po` entry needs `#. module: <module>`).
 
-## 6. Migrations
+## 7. Migrations
 
-The data files are `noupdate="1"`: an update does not change existing databases. Add, in each module you changed, `migrations/<version>/pre-migration.py` from `templates/` and raise the manifest version **above** the database's `latest_version`:
+The data files are `<odoo noupdate="1">`. Odoo skips an existing record of such a file before it reads its fields, so an update changes nothing in existing databases. **Clearing the `noupdate` flag of the records does not help** (the flag is only a second check), and `openupgrade.load_data()` reloads the whole file, including templates you did not correct. Use the models in `templates/`, in each module you changed, and raise the manifest version **above** the database's `latest_version`:
 
-- `pre-migration_reload.py` clears the `noupdate` flag of the corrected templates so that the update reloads them;
-- `pre-migration_link_and_reload.py` also links a record that only exists in the database to its new xmlid, so the update does not create a duplicate.
+- `post-migration_reload.py` becomes `migrations/<version>/post-migration.py`. Fill `FIXED_TEMPLATES` (data file -> xmlids). It loads only those records from the data file in mode `init`, and first drops their non-English `body_html` and `subject` so that the `.po` files (loaded after the post-migration) fill every language.
+- `pre-migration_link.py` becomes `migrations/<version>/pre-migration.py`, only for a template that had no xmlid: it links the existing record to the new xmlid before the data files load, so the update does not create a duplicate.
+- In shared code (`compassion-modules`, also used by Nordic) set `REQUIRED_MODULE = "partner_communication_switzerland"`: the reload only runs where that module is installed. The state test is `IN ('installed', 'to upgrade')`.
 
-The reload overwrites every field of the record, so the XML must hold the database values for `email_from`, `reply_to`, `partner_to`, subject and body. It also replaces any local customisation of these templates in other databases: say so in the PR. Test the migration on a copy of a database before merging.
+The reload overwrites every field of the record, so the XML must hold the database values. It also replaces local customisations of these templates in other databases: say so in the PR.
 
-## 7. Commit, push, pull requests
+## 8. Verify on a copy
+
+Never on your source database; Claude asks your permission before each run.
+
+1. Force the migration on the copy: set `latest_version` of the modules to the previous version in `ir_module_module`, then `odoo-bin -c odoo.conf -d <TEST_DB> -u <modules> --stop-after-init --no-http`. The log must show `Running upgrade ... post-migration` for each module.
+2. Compare with your source database:
+   ```
+   python3 $SKILL/scripts/compare_databases.py --ref <DB> --test <TEST_DB> --config templates.json
+   ```
+   French, German and Italian text, subjects and senders must be identical; English must match ignoring the `data-o-mail-quote` attributes that Odoo adds to blockquotes; no duplicate template.
+3. Render the texts without saving (`templates/render_test_shell.py`, run with `odoo-bin shell`, rolled back): one object, several objects, and the guards. When you create test jobs pass `same_job_search=[('id', '=', 0)]`, otherwise the job is merged into an existing one.
+4. Two templates with the same name in the copy mean the link step did not run because the xmlid already existed. Delete the stray record and its xmlid and run again.
+
+## 9. Export to the comm-rules repository (optional)
+
+```
+python3 $SKILL/scripts/export_to_repo.py --db <DB> --repo ~/Dev/comm-rules --ids 56 449 59 --dry-run
+```
+It writes `<config name>_<EN|FR|DE|IT>.html` from the database, byte for byte. The config name is the name of the `utm.source` of the communication config that uses the template; a missing file is created. Remove `--dry-run`, then commit in that repository (`<TICKET> UPD comm rules: ...`).
+
+## 10. Commit, push, pull requests
 
 - One commit per repo: `T3527 FIX <module>: <summary>`, ticket number first, after `pre-commit`.
+- You may commit and amend yourself: Claude re-reads `git status` and `git log` before assuming its changes are uncommitted.
 - Ask before pushing; push the branch to `origin` over SSH.
 - Open a **draft** PR against `18.0` in each repo, short description (ticket, what changed, link to the other repo's PR), no tool attribution line. Create the first PR, then the second with the link, then update the first. If `gh pr edit` fails with a "Projects (classic)" error, use `gh api -X PATCH repos/<org>/<repo>/pulls/<n> -f body=...`.
+- Greptile reviews the PRs. Read its comments and **check each against the Odoo source** before applying it: on T3527 it was right about the `noupdate` reload, the `to upgrade` state, the optional fields and the several-children case, and wrong that `commercial_name` is not defined anywhere (it is, in a module the shared code does not depend on). Tell it when a point does not apply in your context.
 
-## 8. Things that went wrong on T3527 (check them early)
+## 11. Things that went wrong on T3527 (check them early)
 
 - A wizard that renders a template body must use the QWeb engine; the default is `inline_template`, which ignores `t-set` and `t-out`.
 - A `NameError: urls` came from a list built in a `t-foreach` and read outside its scope.
 - A subject cannot use variables defined in the body.
 - An IDE reformat of the scratch file adds spaces before punctuation; do not push a reformatted file.
-- The forced reload would have overwritten working sender fields with old `${}` text; the XML must be synced first.
+- The first migration cleared the `noupdate` flag and reloaded nothing; the filtered post-migration replaced it.
+- The `to upgrade` state: the first guard only accepted `installed` and skipped the migration during a real upgrade.
+- Old French, German and Italian text survived the reload of the B2S Final Letter until the translations were dropped before loading.
+- A record imported by hand (`__import__.NN`) and a stray copy created by an earlier test produced two "B2S Final Letter" templates.
 - Translations of the `communication.snippet` field were lost because its translation type changed between v14 and v18; check the snippets (`years_uc`...) in each language.
-- Other templates still call `get_date` with legacy keys (ids 46, 93, 132 in the T3527 database).
+- The templates used fields of modules outside the dependencies of the shared module (see section 5).
+- The unplanned exit used the first child's reason for all children.
+- `refresh_text` on a physical job took about 66 s (two PDF renders); see `reference/rules.md`, Pitfalls.
+- Other templates still call `get_date` with legacy keys (ids 46, 93, 96, 127, 132 in the T3527 database).
 
-## 9. Checklist before the PR
+## 12. Checklist before the PR
 
 - [ ] every template of the ticket loaded, cleaned and accepted in the four languages
 - [ ] database updated, backups kept
-- [ ] XML and `.po` synced, `pre-commit` green
-- [ ] migrations added, versions bumped, tested on a copy
-- [ ] draft PRs opened, linked to each other, ticket number in the title
+- [ ] dependency check clean (guards in place), several-object cases handled
+- [ ] XML and `.po` synced, second dry run empty, `pre-commit` green
+- [ ] migrations added (post-migration reload, pre-migration link if needed), versions bumped
+- [ ] migration run on a copy, `compare_databases.py` clean, texts rendered
+- [ ] comm-rules repository updated (if used)
+- [ ] draft PRs opened, linked to each other, ticket number in the title, review comments answered
