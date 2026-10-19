@@ -1,6 +1,6 @@
 {
   "name": "compassion-bundler",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "All the Compassion plugins in one install: every other plugin in this marketplace.",
   "author": {
     "name": "Compassion Switzerland IT"
@@ -14,6 +14,7 @@
   "dependencies": [
     "find-docs",
     "agent-browser",
-    "assisted-by"
+    "assisted-by",
+    "odoo-communication-fix"
   ]
 }
