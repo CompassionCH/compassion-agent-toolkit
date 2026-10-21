@@ -1,7 +1,7 @@
 {
   "name": "odoo-communication-fix",
-  "version": "1.1.0",
-  "description": "Fix and align the Compassion communication e-mail templates in four languages: clean each text, write it back to the database, check the optional fields, sync the XML and .po files, add and verify the migrations, open draft PRs.",
+  "version": "2.0.0",
+  "description": "Fix and align the Compassion communication e-mail templates in four languages: clean each text, write it to the local database, export it to the comm-rules repository and, with explicit permission, push the English and the translations to production over SSH.",
   "author": {
     "name": "Compassion Switzerland IT"
   },

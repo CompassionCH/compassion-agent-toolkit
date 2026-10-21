@@ -19,7 +19,7 @@
 
 - **Guards**: `[0]` on an empty recordset (`payment_mode_id.name`, `sponsorships[0]`) becomes `[:1]` or `(... or [''])[0]`; `child.age` / `child.gender` on several children become `child[:1]...`; a missing field office; an empty previous child name.
 - **Several children**: plural forms driven by `one_child = len(child) == 1`.
-- **Several objects** and **optional fields**: see the two sections below (`check_dependencies.py` finds the second).
+- **Several objects**: see the section below.
 - **`.title()` tricks** replaced by first-letter capitalisation (`x[:1].upper() + x[1:]`).
 - **Words built from pieces** ("salutar" + `lo`/`la`) replaced by whole-word variables.
 - **Text matches** on names or translated reasons (`'LSV' in payment_term`, `"ferngeblieben" in reason`): fragile, report them.
@@ -42,14 +42,6 @@ A job can hold several objects of one partner (children, sponsorships, letters).
 - `field.country_id` (the country of the first child) in a sentence about all children: leave the country out of the grouped branch.
 Add the list branch for each language with the existing vocabulary (*parrainages*, *Patenschaften*, *sostegni*) and ask the user to read the three translations.
 
-## Optional fields
-
-Templates of a shared module must not read fields defined in modules that are not among its dependencies. `scripts/check_dependencies.py` finds them. Guard with `'field' in record._fields` (tested in `inline_template` and `qweb`; `getattr` and `hasattr` are not in the sandbox):
-- sender: `company.with_context(lang=...).commercial_name if 'commercial_name' in company._fields else company.name`
-- signature: `user.short_signature if 'short_signature' in user._fields else user.name`
-- optional sentence: `object.success_sentence if 'success_sentence' in object._fields else ''`
-Adding the dependency is not possible when the module lives in another repository (`report_compassion` is in compassion-switzerland, `compassion-modules` cannot depend on it). Moving the Swiss-specific templates to the Swiss module is the clean fix, done during a refactor, not in a fix ticket.
-
 **Never propose** the gender / agreement lookups (`child.get('he')`, `his`, `him`, `accord_s`, `boy` from `child.get('lui')`...). They are an accepted pattern.
 
 ## Language rules (Compassion glossary)
@@ -62,17 +54,12 @@ Adding the dependency is not possible when the module lives in another repositor
 ## Pitfalls
 
 - **Rendering engine**: `_render_template` defaults to `inline_template` in v18, which ignores `t-set` / `t-out`. Wizards that render a template body must pass `engine="qweb"` and `options={"post_process": True}`. Subjects are inline templates.
+- **XML records and `.po` files**: the data files are `noupdate="1"`, so the English text written in the XML records of the modules is never applied to an existing database, and the `.po` files only matter for a fresh install. Since the production migration they are generic default examples: the skill does not write the corrected texts in them, does not touch the `.po` files and adds no migration script. The corrected texts live in the database, in the comm-rules repository, and are pushed to production with `push_to_production.py` when the user agrees.
+- **Production is never read**: the push only sends `UPDATE`s on the `mail.template` records (id from the local database, English name as a guard). Never add a read of production data, never push `email_from` / `reply_to` / `partner_to` or other fields.
+- **Shared texts in the database only**: a template that works because a Swiss module is installed is fine now, the texts are only used on the Swiss production database. Texts for another organisation's database need their own check.
 - **IDE reformat** of the scratch file puts line breaks around `<t>` elements and renders a space before punctuation. Do not push a reformatted file.
-- **`noupdate`**: the data files are `<odoo noupdate="1">`. In update mode Odoo skips an existing record of such a file **before reading its fields** (`odoo/tools/convert.py`, `_tag_record`); the `noupdate` flag of `ir_model_data` is only a second check, so clearing it (`openupgrade.set_xml_ids_noupdate_value`) reloads nothing. `openupgrade.load_data()` has no record filter and would reset the templates of the file that were not corrected. Use `templates/post-migration_reload.py`: it loads only the listed records in mode `init`. A reload overwrites **every field of the record**, so the XML must carry the database values for `email_from`, `reply_to`, `partner_to`, subject and body.
-- **Translations after a reload**: if the structure of the English text changed, Odoo keeps the old translated values and the `.po` (loaded after the post-migration, without overwrite) does not replace them. The reload helper drops the non-English `body_html` and `subject` of the reloaded records first.
-- **`data-o-mail-quote`**: loading HTML through the ORM adds `data-o-mail-quote="1" data-o-mail-quote-node="1"` to every `<blockquote>` (the footnotes). The text is the same; `compare_databases.py` ignores them. In Odoo's chatter such a footnote can be folded as quoted text.
-- **Shared code**: `compassion-modules` is also used by Nordic, which has other texts. A migration that reloads templates there must be guarded (`REQUIRED_MODULE`), and the module state to test is `IN ('installed', 'to upgrade')`: a dependent of the updated module is `to upgrade` while the migration runs.
 - **Rolled-back tests**: creating a test job with the same partner and config as a pending job **merges** into it (`same_job_search`), so you render the wrong data. Pass `same_job_search=[('id', '=', 0)]`. Nothing is saved if you `env.cr.rollback()` at the end of the `odoo-bin shell` script.
 - **Slow refresh (physical jobs)**: `refresh_text` regenerated the attachments (`get_correspondence_attachments`, a PDF) and counted the PDF pages again at the write of `body_html`, about 30 s each in T3527. `quick_refresh` does not (`skip_pdf_count`). `attachments_object_ids` now skips the regeneration when the objects did not change and the page count is queued (PR #2181). Measure with a timer script before optimising.
-- **Greptile review comments** are often right (it found the `noupdate` reload and the `to upgrade` state) but not always (it said a field had no definition). Check each against the Odoo source and the repositories, then ask the user which to apply.
-- **Duplicates**: a record that only exists in the database (`__import__.NN`) must be linked to the new xmlid in a **pre**-migration, before the data files load.
-- **Version bump**: the migration folder and manifest version must be above `ir_module_module.latest_version` of the target database.
-- **`.po` files**: edit with `polib` (`wrapwidth=78`, the round trip is lossless). A new entry needs `#. module: <module>` or the OCA hook `po-requires-module` fails. The msgid is the database body (`<html><body>`, `&#x27;`), so a fresh install built from the XML may not match it byte for byte.
 - **Templates 56/449 and others `t-if` on `<p>`** (`<p t-if="...">`) work; the revision tool only handles the old Mako syntax.
 - **`gh pr edit`** can fail on the "Projects (classic)" error: use `gh api -X PATCH`.
 - A push can be refused by the sandbox classifier: ask the user for a permission rule rather than working around it.

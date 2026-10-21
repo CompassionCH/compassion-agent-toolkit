@@ -22,7 +22,7 @@ Use the Claude Docs tools (`read`, `update`, `guide`). They are deferred: load t
 
 ## Update (tested)
 
-When a template is cleaned, written to the database and synced to the code (SKILL.md section 4 done), for **every row with that Template ID**:
+When a template is accepted, written to the local database and exported to the comm-rules repository (SKILL.md section 4 done), for **every row with that Template ID** (`Done` does not mean pushed to production):
 1. Row number `N` = position in the table, header row = 0 (read the row with `view` to be sure; the order is by usage, so never reuse a row number from an earlier session). Table id `T` from the search hit. Columns: config 0, template id 1, uses 2, status 3, ticket 4.
 2. One `update(ref=node, engine="prose", container=..., payload={"ops":[...]})` with:
    ```
