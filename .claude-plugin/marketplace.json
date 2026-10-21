@@ -24,6 +24,11 @@
       "name": "assisted-by",
       "source": "./plugins/assisted-by",
       "description": "An Assisted-by: <model id>, <effort>, claude-code trailer on every commit Claude makes."
+    },
+    {
+      "name": "odoo-communication-fix",
+      "source": "./plugins/odoo-communication-fix",
+      "description": "Fix and align the Compassion communication templates in four languages: clean, write to the local database, export to the comm-rules repository, optionally push to production over SSH."
     }
   ]
 }

@@ -1,0 +1,16 @@
+{
+  "name": "odoo-communication-fix",
+  "version": "2.0.0",
+  "description": "Fix and align the Compassion communication e-mail templates in four languages: clean each text, write it to the local database, export it to the comm-rules repository and, with explicit permission, push the English and the translations to production over SSH.",
+  "author": {
+    "name": "Compassion Switzerland IT"
+  },
+  "repository": "https://github.com/CompassionCH/compassion-agent-toolkit",
+  "license": "MIT",
+  "keywords": [
+    "odoo",
+    "mail-template",
+    "translations",
+    "migration"
+  ]
+}
