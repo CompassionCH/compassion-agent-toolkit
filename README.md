@@ -153,7 +153,11 @@ Paste [`admin/managed-settings.json`](admin/managed-settings.json) in claude.ai
 - **denies** reading credentials: `odoo.conf`, `.odoorc`, `~/.pgpass`, `.env*`,
   private SSH keys, `*.pem`, `*.key`;
 - **denies** force-pushes; plain pushes stay allowed;
-- switches off Claude Code's `Co-Authored-By` line.
+- switches off Claude Code's `Co-Authored-By` line;
+- sets `managedSourcesBehavior` to `merge`: a machine that also has an MDM
+  profile or a local `managed-settings.json` applies those too, combined with
+  this policy (lists union, the strictest lock wins), instead of ignoring them.
+  Needs Claude Code v2.1.242 or later.
 
 These rules are guardrails, not a vault: keep production credentials off
 development machines and use anonymized databases (Odoo's neutralize is not
