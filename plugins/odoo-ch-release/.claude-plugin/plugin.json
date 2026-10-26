@@ -1,0 +1,17 @@
+{
+  "name": "odoo-ch-release",
+  "version": "1.0.0",
+  "description": "Release Odoo custom addons to a stage or production server: checks the repositories, previews what a pull brings, writes the release notes, then pulls, updates only the modules that need it and restarts, with live progress and the downtime reported.",
+  "author": {
+    "name": "Compassion Switzerland IT"
+  },
+  "repository": "https://github.com/CompassionCH/compassion-agent-toolkit",
+  "license": "MIT",
+  "keywords": [
+    "odoo",
+    "release",
+    "deployment",
+    "stage",
+    "production"
+  ]
+}
