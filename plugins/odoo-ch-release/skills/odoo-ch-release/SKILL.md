@@ -34,6 +34,8 @@ Top-level keys:
 |---|---|
 | `repos[]` | The master repositories: `name`, `local_path` (git root on this machine), `latest_submodules` (relative paths of submodules to bring to the latest `submodule_branch` before releasing) |
 | `release_notes.ssh`, `release_notes.remote_dir` | Web server and folder where the user release notes are uploaded |
+| `slack.mention` | Optional. What the Slack message starts with to alert people (e.g. `<!channel>`, `<!here>`, or empty). Default: none |
+| `release_notes.url_base` | Optional. Public URL of that folder (e.g. `https://notes.example.org/release-notes/`), to give the user the link once published and to check that it answers |
 | `release_notes.organisation`, `audience`, `language`, `contact` | Used to write the user notes: who the readers are, the language, who to contact |
 | `workdir_root` | Where release folders are created |
 | `ticket_regex` | Regular expression of a ticket reference in commit messages |
@@ -174,7 +176,7 @@ ssh <ssh> "$(printf '%q ' <python> - <odoo_dir>/<odoo_bin> <odoo_dir>/<update_co
 ```
 It counts the employees checked in right now (an attendance without check-out, started in the last 16 hours) out of the active employees, using Odoo's own configuration loader: credentials are never read or shown, no module is loaded (so no pending upgrade can start), nothing is written. Show "N of M employees are checked in right now". If `available` is false (`hr_attendance` not installed) or the script fails, say so and continue without the figure. Never list names.
 
-**6b. When to deploy (only in update mode, only when `$ENV.deferral.enabled`).** Ask with AskUserQuestion: **now**, one option per configured slot (label and time, the next occurrence in `deferral.timezone`: a slot already past today is offered for tomorrow), or **custom time**. Show the estimated downtime and the connected people next to the question. In restart mode, and for an environment without `deferral`, the release is always immediate: do not ask.
+**6b. When to deploy (only in update mode, only when `$ENV.deferral.enabled`).** Ask with AskUserQuestion: **now**, one option per configured slot (label and time, the next occurrence in `deferral.timezone`: a slot already past today is offered for tomorrow), or **custom time**. Show the estimated downtime and the connected people next to the question. In restart mode, and for an environment without `deferral`, the release is always immediate: do not ask. If the chosen time is less than 30 minutes away, say so: the users will get very little warning, and offer the next slot instead.
 
 **6c. The release notes (only when `$ENV.upload_release_notes`).**
 - **Update mode:** replace `<!-- maintenance-notice -->` in the notes with a clear notice, in `release_notes.language`, in the notes' style: the cutoff and the estimate, e.g. "Planned update: Odoo will be unavailable on <date> from <HH:MM> for about <N> minutes. Please save your work before." (an immediate deployment: "Odoo will be unavailable for about <N> minutes, starting now."). Time and date in `deferral.timezone`.
@@ -182,8 +184,34 @@ It counts the employees checked in right now (an attendance without check-out, s
 - The notes are **published now, even when the deployment is deferred**, so the users know in advance. The upload is its own approval:
 ```bash
 scp $WORK/release-notes-<date>.html <release_notes.ssh>:<remote_dir>/
+ssh <release_notes.ssh> 'chmod 644 <remote_dir>/release-notes-<date>.html && ls -l <remote_dir>/release-notes-<date>.html'
 ```
-(adapt to the permissions found on the server; do not use sudo without asking).
+The `chmod 644` keeps the file readable by the web server whatever the uploader's umask. When `release_notes.url_base` is set, check `curl -sI <url_base>release-notes-<date>.html` answers 200 and give the link to the user. Do not use `sudo` for the upload: if the folder is not writable by the user, show the one-time setup below instead of working around it.
+
+**One-time setup of the upload folder** (the user runs it, as root, once; it grants write access to this one folder and nothing else). A dedicated group owns the folder; `setgid` makes new files inherit the group; the web server reads through the "other" permissions:
+```bash
+sudo groupadd --system releasenotes
+sudo usermod -aG releasenotes <upload user>     # effective for the next SSH session
+sudo chgrp releasenotes <remote_dir>
+sudo chmod 2775 <remote_dir>
+```
+Do not put the upload user in the web server's own group (it can expose other private folders of the web server). Check it read-only with `ssh <release_notes.ssh> 'id; test -w <remote_dir> && echo writable'`, and with a harmless marker file that you upload and delete at once.
+
+**6c-bis. Slack message to copy-paste (production, update mode or not, whenever release notes are published).** Write `$WORK/slack-message.txt` and **show it in the chat in a code block**, ready to paste into Slack, in `release_notes.language`. The link is `release_notes.url_base` + the file name; if `url_base` is not configured, ask the user once for the public URL of the folder and store it. Never post to Slack yourself. Slack formatting: `*bold*`, `<url|text>` for a link, `:emoji:`; start with `slack.mention` when set. Keep it to 3 to 5 lines, no module or technical names:
+- **Upcoming** (deferred deployment, update mode):
+  ```
+  :wrench: *Odoo update planned*
+  Odoo will be unavailable on <weekday date> from <HH:MM> for about <N> minutes. Please save your work before.
+  What changes: <url|release notes>
+  ```
+- **Running** (immediate deployment, update mode; give it to the user **when the deployment starts**, and for a deferred one again when it resumes):
+  ```
+  :rotating_light: *Odoo update in progress*
+  Odoo is unavailable for about <N> minutes (started <HH:MM>). Please do not save anything for now, we will say when it is back.
+  What changes: <url|release notes>
+  ```
+- **Restart mode** (no module to update): no downtime information, as in the notes. Only: `:new: *New Odoo release* ... What changes: <url|release notes>`, sent when the deployment is done.
+Offer the "back online" message (`:white_check_mark: *Odoo is back*` with the real downtime) at the end of phase 7 if the user wants one. Stage: no Slack message, there are no user release notes.
 
 **6d. Approval.** Ask with AskUserQuestion, naming the environment, the mode and the time: approve the deployment to `<environment>` (now, or at `<time>`), or stop. Without a clear approval, stop here and leave the files in `$WORK`.
 
@@ -194,6 +222,8 @@ scp $WORK/release-notes-<date>.html <release_notes.ssh>:<remote_dir>/
 The **database name** is the one given in phase 6 (production with `presence`), otherwise ask for it now, offering the previous one first (section 0). Run each step separately, stop at the first error, and print a progress line before each (`[1/6] Pulling ...`), with the environment in the first line. `<sudo>` is `sudo ` when `use_sudo`.
 
 If `sudo` asks for a password (check with `ssh <ssh> sudo -n true`), you cannot answer it: first try `systemctl --no-ask-password <action>` (polkit may allow it; a denial changes nothing). If it is denied, ask the user to run the command **in their own terminal** (`ssh -t <ssh> 'sudo systemctl ...'`): the `!` prefix of this session has no terminal, so `sudo` cannot prompt there. Continue when they confirm, and verify the result yourself with `systemctl is-active` and the server's `date -u`. Never put a password in a command.
+
+**Slack (update mode):** when the deployment starts (right after the approval for an immediate one, at the time for a deferred one), show the **running** message of 6c-bis again in the chat, ready to paste, before the pull. In restart mode, show the new-release message once the restart is done.
 
 **Restart mode** (phase 3): do step 1, then replace steps 2 to 5 by a single restart: note the time, `<sudo>systemctl restart <services>` (one command, the services in the stop order), check `is-active` and the startup log as in step 5, and stop the downtime clock when the main service accepts requests. Then step 6. No update, no Monitor.
 
@@ -212,7 +242,7 @@ If `sudo` asks for a password (check with `ssh <ssh> sudo -n true`), you cannot 
    **Reporting rules.** Tell the user, when starting, that a progress line will arrive every 30 seconds in this conversation. Then relay each event in **one short line** (time, module, n/total, and anything new: a migration, an error, a long silence with its diagnosis). Never wait for the user to ask for progress, and do not repeat unchanged information at length. A long quiet period is not a failure: say what the diagnosis line says, do not kill anything, and only suggest options (wait, abort) when the quiet lasts over 10 minutes or an error appears. Stop the Monitor when `DONE` arrives.
 4. **Evaluate**: the update succeeded only if the process exited 0 **and** the log has no `ERROR`, `CRITICAL` or `Traceback`, and shows `Modules loaded.` Otherwise **do not restart**: show the errors with their context, the log path, and propose options (fix and rerun, roll back the code with `git reset` plus a database restore, which is a decision for the user). The services stay stopped until the user decides.
 5. **Restart**: `<sudo>systemctl start <services in reverse order>`, check `is-active` for all and `journalctl -u <main service> -n 30 --no-pager` for startup errors. **Stop the downtime clock** when the main service is `active` and its log shows it accepts requests (and note that time). If the update failed and the services stay stopped, report the downtime as ongoing since the stop time.
-6. **Report**: what was done, **the downtime of the Odoo server, always** (services stopped at `<time>`, back at `<time>`, total `<mm:ss>`, with the part spent on the module update separately; in update mode also the estimate from phase 3 next to the real figure; in restart mode the downtime of the restart), the environment, warnings seen, link to the technical notes. Append the same figures to the technical notes file (a short "Deployment result" section) so the release has a record. Remind the user to check the site and, if the notes were uploaded, share their URL.
+6. **Report**: what was done, **the downtime of the Odoo server, always** (services stopped at `<time>`, back at `<time>`, total `<mm:ss>`, with the part spent on the module update separately; in update mode also the estimate from phase 3 next to the real figure; in restart mode the downtime of the restart), the environment, warnings seen, link to the technical notes. Append the same figures to the technical notes file (a short "Deployment result" section) so the release has a record. Remind the user to check the site and, if the notes were uploaded, share their URL (the Slack message already carries it).
 
 After an aborted or failed update, **never start any Odoo process on that database** (not even `odoo-bin shell` for a "read-only" check) until module states are checked (`select name, state from ir_module_module where state not in ('installed','uninstalled','uninstallable')`, run by the user if you have no database access): Odoo applies modules still marked `to upgrade` when it loads the database, so the process silently resumes the upgrade, concurrently with any other update. Also tell the user before they start a manual update that no other Odoo process may use the database at the same time.
 

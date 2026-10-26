@@ -79,9 +79,13 @@
     "organisation": "My Organisation",
     "audience": "describe the end users, e.g. accounting and sales staff",
     "language": "English",
-    "contact": "IT"
+    "contact": "IT",
+    "url_base": "https://notes.example.org/release-notes/"
   },
   "workdir_root": "~/releases",
   "ticket_regex": "\\bT\\d{3,6}\\b",
-  "open_command": "xdg-open"
+  "open_command": "xdg-open",
+  "slack": {
+    "mention": ""
+  }
 }
