@@ -27,7 +27,27 @@
       ],
       "use_sudo": true,
       "update_log_dir": "/tmp",
-      "upload_release_notes": true
+      "upload_release_notes": true,
+      "presence": true,
+      "deferral": {
+        "enabled": true,
+        "timezone": "Europe/Zurich",
+        "slots": [
+          {
+            "label": "morning break",
+            "time": "10:00"
+          },
+          {
+            "label": "lunch break",
+            "time": "12:00"
+          },
+          {
+            "label": "end of day",
+            "time": "17:00"
+          }
+        ],
+        "minutes_per_module": 1
+      }
     },
     "stage": {
       "ssh": "my-odoo-stage-host",
@@ -46,7 +66,11 @@
       ],
       "use_sudo": true,
       "update_log_dir": "/tmp",
-      "upload_release_notes": false
+      "upload_release_notes": false,
+      "presence": false,
+      "deferral": {
+        "enabled": false
+      }
     }
   },
   "release_notes": {

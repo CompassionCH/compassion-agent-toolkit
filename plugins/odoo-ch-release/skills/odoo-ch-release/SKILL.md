@@ -1,6 +1,6 @@
 ---
 name: odoo-ch-release
-description: Release Odoo custom addons to a production or stage server (asks which). Checks that the local repositories are committed and pushed on the environment's branch, fetches (without pulling) the server over SSH, computes what a pull would bring, writes technical notes (local, for the IT approver) and user release notes (uploaded to a release-notes web server for production), asks for approval, then pulls, stops the Odoo services, updates the modules and restarts. Use for "deploy to production", "deploy to stage", "push the changes to prod", "release to stage", "prepare the release notes".
+description: Release Odoo custom addons to a production or stage server (asks which). Checks that the local repositories are committed and pushed on the environment's branch, fetches (without pulling) the server over SSH, computes what a pull would bring, writes technical notes (local, for the IT approver) and user release notes (uploaded to a release-notes web server for production), asks for approval (production: shows who is connected and offers to defer the deployment to a quiet moment), then pulls, stops the Odoo services, updates the modules and restarts, or only restarts when no module needs an update. Use for "deploy to production", "deploy to stage", "push the changes to prod", "release to stage", "prepare the release notes".
 ---
 
 # Release Odoo addons to production or stage
@@ -54,8 +54,10 @@ Keys of an environment (`$ENV`):
 | `use_sudo` | Whether `systemctl` needs `sudo` |
 | `update_log_dir` | Where the update log is written on the server |
 | `upload_release_notes` | Whether the user release notes are written and uploaded for this environment (usually production only) |
+| `presence` | `true`: before the approval, show how many people are checked in (HR attendance), see phase 6. Usually production only |
+| `deferral` | Object, usually production only. `enabled`: offer to defer the deployment; `timezone` (e.g. `Europe/Zurich`); `slots`: list of `{"label", "time"}` (e.g. the 10am break, the lunch break, 5pm; `time` is `HH:MM`, 24 h, in that timezone); `minutes_per_module`: estimated downtime per module to update (default 1). Absent or `enabled: false` (stage): the release is always immediate |
 
-**Asked at every release, never stored:** the environment, the database name (phase 7) and the approvals. Offer the previous database name of the same environment as the first option when you know it from this conversation, but let the user confirm it.
+**Asked at every release, never stored:** the environment, the database name (phase 6 when `presence` is on, otherwise phase 7), the deployment time (phase 6, when `deferral` applies) and the approvals. Offer the previous database name of the same environment as the first option when you know it from this conversation, but let the user confirm it.
 
 In the rest of this file `repo.local_path`, `$ENV.ssh` and so on refer to these keys.
 
@@ -131,6 +133,10 @@ Odoo updates dependents of an updated module itself; list only the modules that 
 
 Read the actual diffs of the user-visible commits to understand them. Do not trust commit subjects alone.
 
+**Deployment mode.** Once the `-u` list is known:
+- **Update mode**: the list is not empty. Phase 7 pulls, stops the services, updates the modules, starts the services. Estimated downtime: `deferral.minutes_per_module` (default 1) minutes per module in the list, at least 1 minute (say "about N minutes"; the real figure is reported afterwards).
+- **Restart mode**: the list is empty (only code-only changes, or nothing). Phase 7 pulls and **restarts** the services (`systemctl restart`, which the polkit rule of the preflight also allows), with no stop, no update, no start chain. The deployment is **always immediate** (no time question, no deferral), and the user release notes **do not mention any downtime or planned time**. Say it to the user in the summary: "no module to update, simple restart".
+
 ## 4. User release notes (only when `$ENV.upload_release_notes`)
 
 Skip this phase when `upload_release_notes` is false (say so, and offer to write them anyway if the user wants).
@@ -141,6 +147,7 @@ Write `$WORK/release-notes-<YYYY-MM-DD>.html`, self-contained (inline CSS, no ex
 - Sections grouped by the areas those users know, each change as one short sentence on **what changes for them** and where in Odoo to see it. Fixes: "Fixed: ..." in plain words.
 - No ticket numbers, commit hashes, module or technical names. Leave out purely technical changes (refactors, tests, CI, log or security internals), and say so to the operator in the chat when you drop something.
 - Date, and "Questions: contact `release_notes.contact`".
+- A placeholder comment `<!-- maintenance-notice -->` right under the summary. **Update mode only** (see phase 3), phase 6 replaces it with the notice about the planned downtime. In restart mode, leave no notice and no mention of a downtime or a time.
 
 Check the folder naming on the web server before choosing the file name: `ssh <release_notes.ssh> 'ls -lat <remote_dir> | head'` (read-only) and follow the pattern; there may be an index page to update, ask before editing it. Note the folder's owner: an upload may need rights the user does not have.
 
@@ -148,7 +155,7 @@ Check the folder naming on the web server before choosing the file name: `ssh <r
 
 Write `$WORK/technical-notes-<YYYY-MM-DD>.html`, self-contained, for the IT approver:
 
-- Header: **the environment and host in a prominent badge**, date, who prepared it, `HEAD -> new` SHAs per repository, branch.
+- Header: **the environment and host in a prominent badge**, date, who prepared it, `HEAD -> new` SHAs per repository, branch, **the deployment mode** (update, or simple restart), and for production the people connected at that moment, the chosen time and the estimated downtime (completed in phase 6).
 - Link to the user release notes when they exist (relative link to the local file, and the web URL once uploaded).
 - Table of resolved tickets: reference, commit subject, repository, commit hash (every ticket found in the commits; commits without a ticket listed separately).
 - **Modules to update**: the exact `-u` list (modules already installed only; never `-i`) (database-affecting modules only, comma separated, copy-ready), with per-module the reasons and files that triggered it, then a second table of the code-only modules left out of `-u`, flags for migrations, new modules (listed as not installed by this release), deleted/renamed modules, manifest dependency changes (a new dependency of an updated module that is not installed yet is installed by Odoo itself during `-u`: name it as a risk), and new Python requirements (`requirements.txt` changes to install in the virtualenv **before** the update).
@@ -159,18 +166,36 @@ Open the file with `open_command` and show a short summary in chat.
 
 ## 6. Approval (blocking)
 
-Summarise: **environment and host**, repos and commit counts, number of tickets, module list, services affected, expected downtime. Then ask with AskUserQuestion, naming the environment: approve the deployment to `<environment>`, or stop. When `upload_release_notes`, ask separately whether to upload the release notes now; the upload is its own approval:
+Summarise: **environment and host**, **deployment mode** (phase 3), repos and commit counts, number of tickets, module list, services affected.
 
+**6a. Who is connected (only when `$ENV.presence`, production).** Ask for the database name now (offer the previous one first), then, read-only:
+```bash
+ssh <ssh> "$(printf '%q ' <python> - <odoo_dir>/<odoo_bin> <odoo_dir>/<update_conf> <DB>)" < $SKILL/scripts/presence.py
+```
+It counts the employees checked in right now (an attendance without check-out, started in the last 16 hours) out of the active employees, using Odoo's own configuration loader: credentials are never read or shown, no module is loaded (so no pending upgrade can start), nothing is written. Show "N of M employees are checked in right now". If `available` is false (`hr_attendance` not installed) or the script fails, say so and continue without the figure. Never list names.
+
+**6b. When to deploy (only in update mode, only when `$ENV.deferral.enabled`).** Ask with AskUserQuestion: **now**, one option per configured slot (label and time, the next occurrence in `deferral.timezone`: a slot already past today is offered for tomorrow), or **custom time**. Show the estimated downtime and the connected people next to the question. In restart mode, and for an environment without `deferral`, the release is always immediate: do not ask.
+
+**6c. The release notes (only when `$ENV.upload_release_notes`).**
+- **Update mode:** replace `<!-- maintenance-notice -->` in the notes with a clear notice, in `release_notes.language`, in the notes' style: the cutoff and the estimate, e.g. "Planned update: Odoo will be unavailable on <date> from <HH:MM> for about <N> minutes. Please save your work before." (an immediate deployment: "Odoo will be unavailable for about <N> minutes, starting now."). Time and date in `deferral.timezone`.
+- **Restart mode:** the notes carry no notice and no downtime information.
+- The notes are **published now, even when the deployment is deferred**, so the users know in advance. The upload is its own approval:
 ```bash
 scp $WORK/release-notes-<date>.html <release_notes.ssh>:<remote_dir>/
 ```
-(adapt to the permissions found on the server; do not use sudo without asking). Without a clear approval, stop here and leave the files in `$WORK`.
+(adapt to the permissions found on the server; do not use sudo without asking).
+
+**6d. Approval.** Ask with AskUserQuestion, naming the environment, the mode and the time: approve the deployment to `<environment>` (now, or at `<time>`), or stop. Without a clear approval, stop here and leave the files in `$WORK`.
+
+**6e. If the deployment is deferred.** Write `$WORK/deployment.json` (environment, time, mode, the `-u` list, the SHAs from phase 2, the database name, the release notes URL), add the time and estimate to the technical notes, and tell the user. Then, if the user wants the session to stay open, schedule a one-shot prompt for that time with the session's scheduling tool (`CronCreate`, load it with `ToolSearch`) that runs this skill in resume mode; otherwise the user starts the skill again at that time ("resume the deployment"). **Resume mode**: re-run phases 1 and 2 and the preflight, and verify that the server `HEAD` and `@{u}` still equal the SHAs of `deployment.json` and the `-u` list is unchanged. If anything differs (someone pushed), stop: the plan and the published notes are stale, recompute from phase 3. Otherwise show the people connected again, then run phase 7 without asking the approval again (the approval of 6d was for this time) unless the user cancels. Never run a deferred deployment before its time.
 
 ## 7. Deploy (after approval)
 
-Ask for the **database name** of this environment, offering the previous one first (section 0). Run each step separately, stop at the first error, and print a progress line before each (`[1/6] Pulling ...`), with the environment in the first line. `<sudo>` is `sudo ` when `use_sudo`.
+The **database name** is the one given in phase 6 (production with `presence`), otherwise ask for it now, offering the previous one first (section 0). Run each step separately, stop at the first error, and print a progress line before each (`[1/6] Pulling ...`), with the environment in the first line. `<sudo>` is `sudo ` when `use_sudo`.
 
 If `sudo` asks for a password (check with `ssh <ssh> sudo -n true`), you cannot answer it: first try `systemctl --no-ask-password <action>` (polkit may allow it; a denial changes nothing). If it is denied, ask the user to run the command **in their own terminal** (`ssh -t <ssh> 'sudo systemctl ...'`): the `!` prefix of this session has no terminal, so `sudo` cannot prompt there. Continue when they confirm, and verify the result yourself with `systemctl is-active` and the server's `date -u`. Never put a password in a command.
+
+**Restart mode** (phase 3): do step 1, then replace steps 2 to 5 by a single restart: note the time, `<sudo>systemctl restart <services>` (one command, the services in the stop order), check `is-active` and the startup log as in step 5, and stop the downtime clock when the main service accepts requests. Then step 6. No update, no Monitor.
 
 1. **Pull**: for each repository `cd <path> && git pull --ff-only && git submodule update --init --recursive`. Check that `git rev-parse HEAD` now equals the SHA from phase 2 and `git submodule status --recursive` shows no `+`/`-`. Install new requirements if the notes flagged them (with `<python> -m pip`, ask first).
 2. **Stop services**: `<sudo>systemctl stop <services in order>`, then verify with `systemctl is-active` (all must be `inactive`). **Start the downtime clock here**: note the time of the stop (read it on the server with `ssh <ssh> date -u +%FT%TZ`, so local clock differences do not matter).
@@ -187,7 +212,7 @@ If `sudo` asks for a password (check with `ssh <ssh> sudo -n true`), you cannot 
    **Reporting rules.** Tell the user, when starting, that a progress line will arrive every 30 seconds in this conversation. Then relay each event in **one short line** (time, module, n/total, and anything new: a migration, an error, a long silence with its diagnosis). Never wait for the user to ask for progress, and do not repeat unchanged information at length. A long quiet period is not a failure: say what the diagnosis line says, do not kill anything, and only suggest options (wait, abort) when the quiet lasts over 10 minutes or an error appears. Stop the Monitor when `DONE` arrives.
 4. **Evaluate**: the update succeeded only if the process exited 0 **and** the log has no `ERROR`, `CRITICAL` or `Traceback`, and shows `Modules loaded.` Otherwise **do not restart**: show the errors with their context, the log path, and propose options (fix and rerun, roll back the code with `git reset` plus a database restore, which is a decision for the user). The services stay stopped until the user decides.
 5. **Restart**: `<sudo>systemctl start <services in reverse order>`, check `is-active` for all and `journalctl -u <main service> -n 30 --no-pager` for startup errors. **Stop the downtime clock** when the main service is `active` and its log shows it accepts requests (and note that time). If the update failed and the services stay stopped, report the downtime as ongoing since the stop time.
-6. **Report**: what was done, **the downtime of the Odoo server, always** (services stopped at `<time>`, back at `<time>`, total `<mm:ss>`, with the part spent on the module update separately), the environment, warnings seen, link to the technical notes. Append the same figures to the technical notes file (a short "Deployment result" section) so the release has a record. Remind the user to check the site and, if the notes were uploaded, share their URL.
+6. **Report**: what was done, **the downtime of the Odoo server, always** (services stopped at `<time>`, back at `<time>`, total `<mm:ss>`, with the part spent on the module update separately; in update mode also the estimate from phase 3 next to the real figure; in restart mode the downtime of the restart), the environment, warnings seen, link to the technical notes. Append the same figures to the technical notes file (a short "Deployment result" section) so the release has a record. Remind the user to check the site and, if the notes were uploaded, share their URL.
 
 After an aborted or failed update, **never start any Odoo process on that database** (not even `odoo-bin shell` for a "read-only" check) until module states are checked (`select name, state from ir_module_module where state not in ('installed','uninstalled','uninstallable')`, run by the user if you have no database access): Odoo applies modules still marked `to upgrade` when it loads the database, so the process silently resumes the upgrade, concurrently with any other update. Also tell the user before they start a manual update that no other Odoo process may use the database at the same time.
 
