@@ -4,8 +4,7 @@ Compassion Switzerland's shared setup for AI coding agents on our Odoo work,
 for **Claude Code**. Two layers:
 
 1. **Guardrails, enforced for everyone** through managed settings: no reading
-   credentials, no force-push, ask before dropping a database or upgrading a
-   module.
+   credentials, no force-push.
 2. **Optional plugins** in the `compassion` marketplace, visible in `/plugin` →
    **Discover**. Install all, some or none; remove any whenever you like.
 
@@ -15,16 +14,21 @@ for **Claude Code**. Two layers:
 | `find-docs` | Current docs for any library through Context7, and Odoo docs **pinned to your repository's version** |
 | `agent-browser` | The agent checks its work in your local Odoo through a real Chrome: screenshots, console errors, forms |
 | `assisted-by` | Every commit the agent makes ends with `Assisted-by: <model id>, <effort>, <harness>` |
+| `ticket` | `/ticket T####` takes an Odoo ticket from report to staged fix on your local Odoo; plus `/ticket-list`, `/ticket-explore`, `/ticket-stats`, and `/t` for short. Personal data in tickets is masked before the agent sees it |
 
 The catalog is a common floor, not anyone's personal setup.
 
 ## Install
 
 > **Before you start:** Claude Code, logged in with the organization's
-> account. Node.js 22.13 or newer for `find-docs`, `agent-browser` and
-> `assisted-by`, and npm for the first two (on Debian and Ubuntu, npm is a
-> package of its own). Without them, each of these plugins warns when a
-> session starts.
+> account, plus what your plugins need:
+>
+> - `find-docs`, `agent-browser`: Node.js 22.13+ and npm (on Debian and
+>   Ubuntu, npm is a package of its own)
+> - `assisted-by`: Node.js 22.13+
+> - `ticket`: Python 3 with `venv` (on Debian and Ubuntu, `python3-venv`)
+>
+> A plugin missing its Node.js warns when a session starts.
 
 ### 1. Choose your plugins
 
@@ -46,6 +50,10 @@ The catalog is a common floor, not anyone's personal setup.
 
 ```
 /plugin install assisted-by@compassion
+```
+
+```
+/plugin install ticket@compassion
 ```
 
 **Or let your agent do it.** Paste this into a new Claude Code session; it
@@ -76,6 +84,21 @@ npx ctx7@latest login
 Nothing to do now: the first time the agent needs the browser, it offers to
 install the CLI and its Chrome, asking before each step.
 
+### 5. First use of `ticket`
+
+The first `/ticket` tells you what's missing and gives the exact command for
+each step:
+
+- **Connection:** you run `odoo_ticket.py setup` **in your own terminal**. It
+  asks for the Odoo URL, database, the shared bot account (Enter keeps
+  `claudecode@compassion.ch`), its API key (in the team key vault: search for
+  `claudecode`), and your own Odoo login. It writes
+  `~/.config/compassion-odoo/config.ini`: the API key never goes through the
+  chat, and the agent is denied reading that file.
+- **Name detection:** a one-time install of Presidio and spaCy models (about
+  1 GB, into `~/.local/share/compassion-odoo/venv`). The agent offers to run
+  it. Until then, ticket reads stop rather than risk showing names.
+
 <details>
 <summary><b>No <code>compassion</code> marketplace in <code>/plugin</code>?</b> (machine without the organization's settings)</summary>
 
@@ -89,6 +112,15 @@ Then turn on its updates: `/plugin` → **Marketplaces** → compassion →
 **Enable auto-update**.
 
 </details>
+
+## Using `ticket`
+
+Type `/ticket T1234` (or `/t T1234` for short) in Claude Code. The agent
+reads the ticket, reproduces it locally and proposes a fix, then **stops for
+your approval**. After fixing, it stages the files and proposes a commit
+message: you commit and push. `/ticket-list` shows your open tickets,
+`/ticket-explore` unassigned ones worth picking up, `/ticket-stats` some
+numbers.
 
 ## Updates and changes
 
@@ -123,6 +155,26 @@ chat; if you do, revoke it and make a new one.
 `ctx7 setup` would install Context7's generic `find-docs` too: keep one,
 ideally this one, which pins Odoo versions.
 
+## Personal data in tickets
+
+With `ticket`, every ticket read goes through a sanitizer before the
+agent sees it: last names, emails, phones, IBANs, AHV numbers, IPs and
+addresses become tokens like `{{NAME_1}}`; first names stay. It knows everyone
+linked to the ticket, and name detection catches the others. Tokens are
+numbered per run, so people can't be linked across tickets. The plugin never
+writes to Odoo, and a hook asks you before any unmasked read (`--raw`). To see
+what the agent would get, in your own terminal:
+
+```bash
+python3 <plugin path>/scripts/sanitizer.py --dry-run T1234
+```
+
+(`<plugin path>` is in the message `setup` printed, or the newest folder in
+`~/.claude/plugins/cache/compassion/ticket/`.)
+
+Masking lowers the risk, it doesn't remove it: an unusual name in free text
+can still slip through.
+
 ## The commit trailer
 
 With `assisted-by`, every commit the agent makes ends with, for example:
@@ -151,7 +203,7 @@ Paste [`admin/managed-settings.json`](admin/managed-settings.json) in claude.ai
 - blocks the retired all-in-one `compassion-agent-toolkit` plugin (0.3 and
   earlier);
 - **denies** reading credentials: `odoo.conf`, `.odoorc`, `~/.pgpass`, `.env*`,
-  private SSH keys, `*.pem`, `*.key`;
+  private SSH keys, `*.pem`, `*.key`, the `ticket` config;
 - **denies** force-pushes; plain pushes stay allowed;
 - switches off Claude Code's `Co-Authored-By` line;
 - sets `managedSourcesBehavior` to `merge`: a machine that also has an MDM
