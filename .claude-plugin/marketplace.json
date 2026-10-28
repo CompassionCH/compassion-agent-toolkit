@@ -26,8 +26,8 @@
       "description": "An Assisted-by: <model id>, <effort>, claude-code trailer on every commit Claude makes."
     },
     {
-      "name": "odoo-ch-release",
-      "source": "./plugins/odoo-ch-release",
+      "name": "odoo-release",
+      "source": "./plugins/odoo-release",
       "description": "Release Odoo addons to stage or production: previews what a pull brings, writes the release notes, updates only the modules that need it (production: shows who is connected, can defer to a quiet moment), live progress and downtime reported."
     }
   ]

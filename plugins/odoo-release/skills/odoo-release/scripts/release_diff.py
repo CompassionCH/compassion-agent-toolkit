@@ -17,6 +17,20 @@ files that triggered them, and new / removed modules.
 Each changed module has `update: true` when something in it affects the
 database (so `-u` is needed) and `update: false` when only code changed
 (a service restart is enough). `reasons` says why, `files` lists the changes.
+A module that does not exist at the old commit is `new: true, update: false`:
+the release never installs modules, and `-u` ignores a module that is not
+installed anyway.
+
+Every submodule whose checked-out commit differs from the pointer that the
+pull would give is analysed, whether the pointer moved or not (`drift: true`
+when the server has a different commit checked out than the recorded one):
+`git submodule update` resets it, so what it changes must be known.
+
+Whether a Python change touches the schema is decided on the syntax tree, not
+on words in the diff: the field definitions (`fields.X(...)`, `models.Constraint`
+...) and the `_name`, `_inherit`, `_inherits`, `_table`, `_sql_constraints`
+class attributes of the old and the new file are compared. A stored compute
+whose `@api.depends` changed is NOT detected: read such diffs.
 """
 import argparse
 import ast
@@ -28,8 +42,6 @@ import sys
 
 DEFAULT_TICKET_REGEX = r"\bT\d{3,6}\b"
 TICKET = re.compile(DEFAULT_TICKET_REGEX)
-# Files that do not change module behaviour on their own
-IGNORED = re.compile(r"(^|/)(tests?|i18n|static/description|migrations?)/|\.md$|\.rst$|\.pot?$")
 RUNTIME = re.compile(r"\.(py|xml|csv|js|scss|css)$")
 
 
@@ -56,10 +68,47 @@ def pointers(path, rev):
 MANIFEST_NEUTRAL = {"version", "post_load", "author", "website", "license", "maintainers",
                     "development_status", "summary", "description", "category", "images",
                     "external_dependencies", "assets", "sequence"}
-# A python diff line touching the schema or what is stored for models
-SCHEMA = re.compile(r"fields\.\w+\(|^\s*_(name|inherit|inherits|table|order|rec_name|sql_constraints|"
-                    r"parent_name|description|check_company_auto)\b|\b(store|index|compute|related|"
-                    r"ondelete|domain|selection|selection_add)\s*=|\bhelp\s*=|\bstring\s*=")
+# Class attributes that define a model for the database
+SCHEMA_ATTRS = {"_name", "_inherit", "_inherits", "_table", "_sql_constraints"}
+
+
+def _is_schema_call(value):
+    """fields.Char(...), models.Constraint(...), models.Index(...)."""
+    if not (isinstance(value, ast.Call) and isinstance(value.func, ast.Attribute)):
+        return False
+    owner = value.func.value
+    if not isinstance(owner, ast.Name):
+        return False
+    return owner.id == "fields" or (
+        owner.id == "models" and value.func.attr in ("Constraint", "Index", "UniqueIndex")
+    )
+
+
+def schema_signature(source):
+    """{(class, attribute): dump} of the field definitions and the model keys."""
+    sig = {}
+    for cls in ast.walk(ast.parse(source)):
+        if not isinstance(cls, ast.ClassDef):
+            continue
+        for stmt in cls.body:
+            if isinstance(stmt, ast.Assign):
+                targets, value = stmt.targets, stmt.value
+            elif isinstance(stmt, ast.AnnAssign) and stmt.value is not None:
+                targets, value = [stmt.target], stmt.value
+            else:
+                continue
+            for target in targets:
+                if isinstance(target, ast.Name) and (
+                    target.id in SCHEMA_ATTRS or _is_schema_call(value)
+                ):
+                    sig[(cls.name, target.id)] = ast.dump(value)
+    return sig
+
+
+def source_at(path, rev, f):
+    res = subprocess.run(["git", "-c", f"safe.directory={os.path.abspath(path)}", "-C", path,
+                          "show", f"{rev}:{f}"], capture_output=True, text=True)
+    return res.stdout if res.returncode == 0 else ""
 
 
 def manifest(path, rev, f):
@@ -87,14 +136,15 @@ def db_reason(path, base, new, f):
     if f.endswith(".po"):
         return "translations"
     if f.endswith(".py"):
-        diff = git(path, "diff", "-U0", f"{base}..{new}", "--", f)
-        lines = [l[1:] for l in diff.splitlines() if l[:1] in "+-" and l[:3] not in ("+++", "---")]
-        if any(SCHEMA.search(l) for l in lines):
-            return "model definition (fields/schema)"
+        try:
+            if schema_signature(source_at(path, base, f)) != schema_signature(source_at(path, new, f)):
+                return "model definition (fields/schema)"
+        except SyntaxError:
+            return "python file not parsable: schema change not excluded"
     return None  # js, scss, css, other python: runtime code only
 
 
-def analyse(name, path, base, new, result):
+def analyse(name, path, base, new, result, drift=None):
     log = git(path, "log", "--no-merges", "--format=%h%x09%an%x09%s%n%b%x00", f"{base}..{new}")
     commits = []
     for chunk in log.split("\x00"):
@@ -123,19 +173,24 @@ def analyse(name, path, base, new, result):
                 if reason and reason not in mod["reasons"]:
                     mod["reasons"].append(reason)
                 break
-    for mod in changed.values():
-        mod["update"] = bool(mod["reasons"])
+    added = {os.path.basename(m) for m in new_mods - old_mods}
+    for mname, mod in changed.items():
+        if mname in added:
+            mod.update(update=False, new=True, reasons=["new module: never installed by the release"])
+        else:
+            mod["update"] = bool(mod["reasons"])
     result.append({
         "repo": name, "from": base[:10], "to": new[:10], "commits": commits,
         "modules": changed,
-        "new_modules": sorted(os.path.basename(m) for m in new_mods - old_mods),
+        "new_modules": sorted(added),
         "removed_modules": sorted(os.path.basename(m) for m in old_mods - new_mods),
+        **({"drift": True, "note": drift} if drift else {}),
     })
     old_p, new_p = pointers(path, base), pointers(path, new)
     for sub, sha in new_p.items():
-        if old_p.get(sub) == sha:
-            continue
         subpath = os.path.join(path, sub)
+        if not os.path.exists(os.path.join(subpath, ".git")):
+            continue  # not initialised on this server: the update will not touch it
         if sub not in old_p:
             result.append({"repo": f"{name}/{sub}", "from": None, "to": sha[:10],
                            "commits": [], "modules": {}, "note": "new submodule"})
@@ -144,9 +199,15 @@ def analyse(name, path, base, new, result):
         # if the commit is still missing, say so instead of guessing.
         if git(subpath, "cat-file", "-t", sha, check=False).strip() != "commit":
             sys.exit(f"{subpath}: commit {sha} not fetched; run `git -C {subpath} fetch`")
-        # Compare with what is checked out in the submodule now
         current = git(subpath, "rev-parse", "HEAD").strip()
-        analyse(f"{name}/{sub}", subpath, current, sha, result)
+        if current == sha:
+            continue
+        # What `git submodule update` will change in the submodule, pointer moved or not
+        drift = None
+        if current != old_p[sub]:
+            drift = (f"checked out at {current[:10]} while the repository records {old_p[sub][:10]}: "
+                     f"`git submodule update` resets it to {sha[:10]}")
+        analyse(f"{name}/{sub}", subpath, current, sha, result, drift)
 
 
 def main():
