@@ -1,0 +1,91 @@
+{
+  "repos": [
+    {
+      "name": "my-addons",
+      "local_path": "~/path/to/my-addons",
+      "latest_submodules": [
+        "relative/path/of/submodule-to-bring-to-latest"
+      ]
+    }
+  ],
+  "environments": {
+    "production": {
+      "ssh": "my-odoo-prod-host",
+      "branch": "main-release-branch",
+      "base_branch": null,
+      "submodule_branch": "branch-submodules-are-brought-to, or null to leave them alone",
+      "repo_paths": {
+        "my-addons": "/opt/odoo/addons/my-addons"
+      },
+      "python": "/opt/odoo/venv/bin/python",
+      "odoo_dir": "/opt/odoo",
+      "odoo_bin": "odoo/odoo-bin",
+      "update_conf": "etc/update.conf",
+      "services": [
+        "odoo-longjobs.service",
+        "odoo.service"
+      ],
+      "use_sudo": true,
+      "update_log_dir": "/tmp",
+      "upload_release_notes": true,
+      "presence": true,
+      "deferral": {
+        "enabled": true,
+        "timezone": "Europe/Zurich",
+        "slots": [
+          {
+            "label": "morning break",
+            "time": "10:00"
+          },
+          {
+            "label": "lunch break",
+            "time": "12:00"
+          },
+          {
+            "label": "end of day",
+            "time": "17:00"
+          }
+        ],
+        "minutes_per_module": 1
+      }
+    },
+    "stage": {
+      "ssh": "my-odoo-stage-host",
+      "branch": "stage",
+      "base_branch": "production-branch",
+      "submodule_branch": null,
+      "repo_paths": {
+        "my-addons": "/home/user/addons/my-addons"
+      },
+      "python": "/home/user/odoo/.venv/bin/python",
+      "odoo_dir": "/home/user/odoo",
+      "odoo_bin": "odoo-bin",
+      "update_conf": "odoo.conf",
+      "services": [
+        "odoo.service"
+      ],
+      "use_sudo": true,
+      "update_log_dir": "/tmp",
+      "upload_release_notes": false,
+      "presence": false,
+      "deferral": {
+        "enabled": false
+      }
+    }
+  },
+  "release_notes": {
+    "ssh": "my-nginx-host",
+    "remote_dir": "/var/www/release-notes",
+    "organisation": "My Organisation",
+    "audience": "describe the end users, e.g. accounting and sales staff",
+    "language": "English",
+    "contact": "IT",
+    "url_base": "https://notes.example.org/release-notes/"
+  },
+  "workdir_root": "~/releases",
+  "ticket_regex": "\\bT\\d{3,6}\\b",
+  "open_command": "xdg-open",
+  "slack": {
+    "mention": ""
+  }
+}

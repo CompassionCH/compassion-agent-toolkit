@@ -15,6 +15,7 @@ for **Claude Code**. Two layers:
 | `find-docs` | Current docs for any library through Context7, and Odoo docs **pinned to your repository's version** |
 | `agent-browser` | The agent checks its work in your local Odoo through a real Chrome: screenshots, console errors, forms |
 | `assisted-by` | Every commit the agent makes ends with `Assisted-by: <model id>, <effort>, <harness>` |
+| `odoo-release` | Releases Odoo addons to stage or production: previews the pull, writes the release notes, updates only the modules that need it (production: shows who is connected and can defer to a quiet moment), with live progress and the downtime reported |
 
 The catalog is a common floor, not anyone's personal setup.
 
@@ -46,6 +47,10 @@ The catalog is a common floor, not anyone's personal setup.
 
 ```
 /plugin install assisted-by@compassion
+```
+
+```
+/plugin install odoo-release@compassion
 ```
 
 **Or let your agent do it.** Paste this into a new Claude Code session; it
