@@ -175,6 +175,11 @@ python3 <plugin path>/scripts/sanitizer.py --dry-run T1234
 Masking lowers the risk, it doesn't remove it: an unusual name in free text
 can still slip through.
 
+The agent can reach the API key, so what keeps it read-only is the
+`claudecode` account itself: an internal user with no app roles and technical
+features off. It can still do what every internal user can (post messages,
+upload attachments, edit events and registrations); the CLI never does.
+
 ## The commit trailer
 
 With `assisted-by`, every commit the agent makes ends with, for example:
