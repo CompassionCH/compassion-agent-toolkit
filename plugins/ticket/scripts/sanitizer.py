@@ -31,6 +31,7 @@ import xmlrpc.client
 from collections import Counter
 
 W = r"[\wÀ-ÿ'’-]"  # word chars incl. accents
+L = r"[^\W\d_]"  # one letter, accents included
 
 PATTERNS = [
     ("EMAIL", re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")),
@@ -56,6 +57,13 @@ NER_MODELS = {
     "it": "it_core_news_md",
 }
 NER_MIN_SCORE = 0.6
+# Field labels and template words of our own output. Bot/test accounts ("Claude
+# Code", "… Stage", "… Test") have them as last names; masking those would wreck
+# the output, so they are never masked, even for registered people.
+LABEL_WORDS = {
+    "stage", "test", "code", "task", "ticket", "partner", "assignee", "priority",
+    "step", "option", "details", "support", "team", "finance",
+}
 CAP_RUN = re.compile(r"[A-ZÀ-Þ][\wÀ-ÿ'’-]*(?:[ \t]+[A-ZÀ-Þ][\wÀ-ÿ'’-]*)*")
 # Words the NER models like to mistake for people in our tickets.
 NER_IGNORE = {
@@ -69,9 +77,7 @@ NER_IGNORE = {
     "windows", "outlook", "gmail", "excel", "word", "pdf", "zoom", "teams", "slack",
     "rechnung", "zahlung", "spende", "brief", "facture", "paiement", "lettre",
     "fattura", "pagamento", "lettera",
-    # ticket field labels and template words
-    "stage", "test", "code", "task", "ticket", "partner", "assignee", "priority",
-    "step", "option", "details", "support", "team", "finance",
+    *LABEL_WORDS,
     # greetings / mail headers
     "hello", "hi", "hey", "dear", "hallo", "liebe", "lieber", "bonjour", "salut",
     "cher", "chère", "ciao", "buongiorno", "caro", "cara", "hej", "skickat",
@@ -116,13 +122,13 @@ class Sanitizer:
             if val and isinstance(val, str) and len(val.strip()) > 2:
                 self._add_known(kind.upper(), val)
 
-    def _add_known(self, kind, real):
+    def _add_known(self, kind, real, ignore=LABEL_WORDS):
         real = real.strip()
-        # Bot/test accounts ("Claude Code", "… Test") have common words as
-        # last names; masking those everywhere would wreck the ticket text.
-        if len(real) < 2 or (kind == "NAME" and real.lower() in NER_IGNORE):
+        if len(real) < 2 or (kind == "NAME" and real.lower() in ignore):
             return
-        rx = re.compile(rf"(?<!{W}){re.escape(real)}(?!{W})", re.IGNORECASE)
+        # Letters-only boundary: masks "Lettre_Dupont.pdf", "scan-dupont.pdf",
+        # "Dupont's", but not "Dupontel".
+        rx = re.compile(rf"(?<!{L}){re.escape(real)}(?!{L})", re.IGNORECASE)
         self.known.append((rx, kind, real))
         # Longest first so "Müller-Schmid" wins over "Müller".
         self.known.sort(key=lambda k: -len(k[2]))
@@ -208,7 +214,7 @@ class Sanitizer:
                 keep, rest = words[0], " ".join(words[1:])
                 new = keep + (" " + self.token("NAME", rest) if rest else "")
                 for w in words[1:]:
-                    self._add_known("NAME", w)
+                    self._add_known("NAME", w, ignore=NER_IGNORE)
             else:
                 # Not propagated: lone capitalized words are often false hits
                 # ("Stage", "Test") and would get masked everywhere.
@@ -246,7 +252,6 @@ def register_ticket_people(san, odoo, model=None, rec_id=None):
     staff = odoo.execute("res.users", "search_read", [["share", "=", False]],
                          {"fields": ["partner_id"]})
     m2o += [u["partner_id"] for u in staff]
-    m2o = [v for v in m2o if v]
     # Users this account may not read still show up by name on their tasks;
     # this also covers the ticket's own assignees.
     groups = odoo.execute("project.task", "read_group", [["user_ids", "!=", False]],
@@ -255,7 +260,14 @@ def register_ticket_people(san, odoo, model=None, rec_id=None):
         first, _, last = g["user_ids"][1].rsplit(", ", 1)[-1].partition(" ")
         if last:
             san.add_person(firstname=first, lastname=last)
+    register_partners(san, odoo, m2o)
 
+
+def register_partners(san, odoo, m2o):
+    """Register partners given as many2one values ([id, name])."""
+    m2o = [v for v in m2o if v]
+    if not m2o:
+        return
     pids = {v[0] for v in m2o}
     pfields = odoo.execute("res.partner", "fields_get", [], {"attributes": []})
     fields = [f for f in PARTNER_FIELDS if f in pfields]
@@ -294,16 +306,18 @@ def _read_partners(odoo, ids, fields):
 
 
 class SanitizingStream:
-    """Wraps stdout/stderr: every line is sanitized before it is written."""
+    """Wraps stdout/stderr: output is sanitized before it is written."""
 
     def __init__(self, san, raw):
         self.san, self.raw, self.buf = san, raw, ""
 
     def write(self, s):
         self.buf += s
-        while "\n" in self.buf:
-            line, self.buf = self.buf.split("\n", 1)
-            self.raw.write(self.san.sanitize(line) + "\n")
+        # Up to the last newline in one go, so a surname found further down
+        # is masked above it too.
+        if "\n" in self.buf:
+            done, _, self.buf = self.buf.rpartition("\n")
+            self.raw.write(self.san.sanitize(done) + "\n")
         return len(s)
 
     def flush(self):
@@ -328,10 +342,10 @@ def fetch_ticket_text(raw_id, env):
     odoo = ot.Odoo(ot.load_config(env))
     model, rec_id = ot.find_ticket(odoo, raw_id)
     if not model:
-        sys.exit(f"No ticket found for {raw_id!r}")
+        sys.exit(f"No ticket {raw_id} in [{env}].")
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
-        ot.fetch(odoo, raw_id, model)
+        ot.fetch(odoo, model, rec_id)
     return buf.getvalue(), (odoo, model, rec_id)
 
 
@@ -362,7 +376,7 @@ def main():
     venv_py = os.path.join(ot.NER_VENV, "bin", "python")
     if os.path.exists(venv_py) and os.path.realpath(sys.prefix) != os.path.realpath(ot.NER_VENV):
         os.execv(venv_py, [venv_py, os.path.abspath(__file__)] + sys.argv[1:])
-    ap = argparse.ArgumentParser(description=__doc__,
+    ap = argparse.ArgumentParser(description=__doc__, allow_abbrev=False,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("ticket", nargs="?", help="ticket code (omit to read stdin)")
     ap.add_argument("--env", default="prod")
@@ -370,8 +384,14 @@ def main():
     ap.add_argument("--regex-only", action="store_true",
                     help="skip name detection (Presidio/spaCy)")
     args = ap.parse_args()
+    if (args.dry_run or args.regex_only) and not sys.stdin.isatty():
+        sys.exit("--dry-run and --regex-only show unmasked or half-masked personal data: "
+                 "run them in your own terminal, not in Claude.")
 
     san = Sanitizer(ner=not args.regex_only)
+    if not san.analyzer and not args.regex_only:
+        sys.exit("Name detection is not installed: run odoo_ticket.py install-ner, "
+                 "or rerun with --regex-only to accept weaker masking.")
     if args.ticket:
         text, (odoo, model, rec_id) = fetch_ticket_text(args.ticket, args.env)
         register_ticket_people(san, odoo, model, rec_id)

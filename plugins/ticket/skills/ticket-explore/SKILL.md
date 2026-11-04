@@ -68,7 +68,8 @@ stage, priority, dates, and attachments**. Present it clearly with:
 ## What's in the pool
 
 - **Unassigned only** (`user_id` empty) and **open** (stage not in
-  *Done/Complete/In Production/Merge/Ready to Release/Cancelled/Rejected*), across all projects.
+  *Done/Complete/In Production/Merge/Ready to Release/User Acceptance/Cancelled/Rejected*,
+  the same set as `/ticket-list`), across all projects.
   The pool is dev-heavy already (IT Department, Backlog Reduction, MyCompassion, Odoo
   migrations) — little CRM/recruitment noise.
 - **Sort:** ⭐ `priority` descending (stars 0–3), then **oldest `create_date` first** (drain the

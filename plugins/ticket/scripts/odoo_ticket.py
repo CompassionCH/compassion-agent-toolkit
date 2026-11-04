@@ -14,8 +14,8 @@ Odoo db id. Stdlib only; name detection runs in its own venv (install-ner).
 
 Personal data: every read is sanitized (sanitizer.py): last names, emails,
 phones, addresses become {{TOKENS}} numbered per run (not linkable across
-runs); first names are kept. `--raw` disables this (the plugin's hook asks the
-user first).
+runs); first names are kept. `--raw` disables this, and only runs in your own
+terminal.
 
 Config: ~/.config/compassion-odoo/config.ini, one section per environment
 (prod, stage, local), written by `setup`. Never put it in a repository.
@@ -29,7 +29,7 @@ import sys
 import unicodedata
 import xmlrpc.client
 from collections import Counter, defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from html.parser import HTMLParser
 
 # First access to a DB loads its registry, which can take a while on a big
@@ -62,7 +62,7 @@ def load_config(env):
     """Read the [env] section (prod/stage/local) from the user's config.ini."""
     if not os.path.exists(CONFIG_PATH):
         sys.exit(f"No config at {CONFIG_PATH}.\n{setup_hint(env)}")
-    parser = configparser.ConfigParser()
+    parser = configparser.ConfigParser(interpolation=None)
     parser.read(CONFIG_PATH)
     if env not in parser:
         avail = ", ".join(parser.sections()) or "(none)"
@@ -96,7 +96,7 @@ def setup(env):
 
     if not sys.stdin.isatty():
         sys.exit(f"`setup` asks for an API key: run it in your own terminal.\n{setup_hint(env)}")
-    parser = configparser.ConfigParser()
+    parser = configparser.ConfigParser(interpolation=None)
     parser.read(CONFIG_PATH)
     old = dict(parser[env]) if env in parser else {}
     print(f"Configuring [{env}] in {CONFIG_PATH}. Enter keeps the value in brackets.")
@@ -244,6 +244,7 @@ class Odoo:
         )
         if not self.uid:
             sys.exit("Authentication failed. Check ODOO_LOGIN / ODOO_API_KEY / ODOO_DB.")
+        self.san = None  # set when output is masked
         self.models = xmlrpc.client.ServerProxy(f"{cfg['ODOO_URL']}/xmlrpc/2/object")
 
     def execute(self, model, method, *args, **kw):
@@ -276,9 +277,7 @@ def find_ticket(odoo, raw_id, forced_model=None):
 
     A user-facing "T####" is the project.task **code** field (shown as
     "[T2917] ..."), NOT the database id — those differ and the id is not
-    normally visible. Resolve by code first; helpdesk.ticket uses its "number".
-    Only as a last resort do we treat the digits as a raw db id (with a warning),
-    since that could otherwise silently hit a different task.
+    normally visible; helpdesk.ticket uses its "number". (None, None) if not found.
     """
     num = raw_id.upper().lstrip("T").strip()
     code = "T" + num
@@ -294,28 +293,13 @@ def find_ticket(odoo, raw_id, forced_model=None):
                     if ids:
                         return model, ids[0]
         if model == "helpdesk.ticket":
-            for domain in ([["number", "=", num]], [["number", "ilike", num]]):
-                ids = odoo.execute(model, "search", domain, limit=1)
-                if ids:
-                    return model, ids[0]
-    # Last resort: the digits as a raw db id (forced model, or no code match).
-    if num.isdigit():
-        for model in candidates:
-            if not model or not odoo.model_exists(model):
-                continue
-            ids = odoo.execute(model, "search", [["id", "=", int(num)]], limit=1)
+            ids = odoo.execute(model, "search", [["number", "=", num]], limit=1)
             if ids:
-                print(f"[warn] no ticket code {code!r}; resolved {raw_id!r} as raw "
-                      f"{model} db id {num}", file=sys.stderr)
                 return model, ids[0]
     return None, None
 
 
-def fetch(odoo, raw_id, forced_model=None):
-    model, rec_id = find_ticket(odoo, raw_id, forced_model)
-    if not model:
-        sys.exit(f"No ticket found for {raw_id!r} in helpdesk.ticket or project.task.")
-
+def fetch(odoo, model, rec_id):
     fields = [
         "name", "code", "description", "stage_id", "user_ids", "partner_id",
         "priority", "create_date", "write_date", "number", "team_id",
@@ -382,11 +366,13 @@ def search(odoo, term, limit):
             continue
         # "code" (T####) on project.task, "number" on helpdesk.ticket.
         existing = odoo.execute(model, "fields_get", [], {"attributes": ["string"]})
-        want = [f for f in ("name", "code", "number", "stage_id", "user_ids") if f in existing]
+        want = [f for f in ("name", "code", "number", "stage_id", "user_ids", "partner_id")
+                if f in existing]
         names = task_assignees(odoo)
         ids = odoo.execute(model, "search_read",
                            ["|", ["name", "ilike", term], ["description", "ilike", term]],
                            {"fields": want, "limit": limit})
+        _register_partners(odoo, ids)
         if ids:
             print(f"\n## {model}")
             for r in ids:
@@ -395,11 +381,11 @@ def search(odoo, term, limit):
                       f"-> {_assignees(r, names) or 'unassigned'}")
 
 
-# Stages treated as "completed/closed" — hidden by the default `list` view.
-LIST_CLOSED_STAGES = [
-    "Done", "Cancelled", "In Production", "Complete", "Rejected", "Merge",
-    "User Acceptance",
-]
+# One definition of "closed" for list, explore and stats.
+DONE_STAGES = {"Done", "Complete", "In Production", "Merge", "Ready to Release",
+               "User Acceptance"}
+CANCELLED_STAGES = {"Cancelled", "Rejected"}
+CLOSED_STAGES = sorted(DONE_STAGES | CANCELLED_STAGES)
 # Actionable-first ordering for grouping the `list` output.
 LIST_STAGE_ORDER = [
     "In Progress", "Blocked", "In Review", "Ready", "Backlog", "New Request",
@@ -472,14 +458,15 @@ def list_tickets(odoo, show_all=False, assignee=None):
 
     domain = [["user_ids", "in", [user["id"]]]]
     if not show_all:
-        domain.append(["stage_id.name", "not in", LIST_CLOSED_STAGES])
+        domain.append(["stage_id.name", "not in", CLOSED_STAGES])
     tasks = odoo.execute(
         "project.task", "search_read", domain,
         {"fields": ["code", "name", "stage_id", "project_id", "priority",
-                    "create_date"], "limit": 500},
+                    "create_date", "partner_id"], "limit": 500},
     )
+    _register_partners(odoo, tasks)
 
-    now = datetime.utcnow()
+    now = _utcnow()
     base = odoo.cfg["ODOO_URL"]
     scope = "All" if show_all else "Open"
     print(f"# {scope} tickets for {user['name']} ({len(tasks)})")
@@ -531,17 +518,17 @@ def list_tickets(odoo, show_all=False, assignee=None):
         print(f"\n_Priority tickets (highest first): {tops}_")
 
 
-# Stage classification for stats: "done" (shipped), "cancelled", else "open".
-STATS_DONE_STAGES = {"Done", "Complete", "In Production", "Merge", "Ready to Release"}
-STATS_CANCELLED_STAGES = {"Cancelled", "Rejected"}
-
-
 def _stats_status(stage_name):
-    if stage_name in STATS_DONE_STAGES:
+    if stage_name in DONE_STAGES:
         return "done"
-    if stage_name in STATS_CANCELLED_STAGES:
+    if stage_name in CANCELLED_STAGES:
         return "cancelled"
     return "open"
+
+
+def _utcnow():
+    # Naive, like the UTC strings Odoo returns.
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def _parse_dt(s):
@@ -596,7 +583,7 @@ def stats(odoo, show_all=False, assignee=None):
          "context": {"active_test": False}, "limit": 10000},
     )
 
-    now = datetime.utcnow()
+    now = _utcnow()
     this_year = now.year
     total = len(tasks)
     done = cancelled = open_ = in_prog = blocked = high = archived_open = 0
@@ -769,18 +756,18 @@ def stats(odoo, show_all=False, assignee=None):
 def explore(odoo, project=None, limit=15, offset=0):
     """List UNASSIGNED, open project.task tickets to pick up, ranked by ⭐ stars
     (priority) then oldest-first. Paginated via --limit/--offset."""
-    closed = list(STATS_DONE_STAGES | STATS_CANCELLED_STAGES)
-    domain = [["user_ids", "=", False], ["stage_id.name", "not in", closed]]
+    domain = [["user_ids", "=", False], ["stage_id.name", "not in", CLOSED_STAGES]]
     if project:
         domain.append(["project_id.name", "ilike", project])
     total = odoo.execute("project.task", "search_count", domain)
     tasks = odoo.execute(
         "project.task", "search_read", domain,
         {"fields": ["code", "name", "stage_id", "project_id", "priority",
-                    "create_date", "description"],
+                    "create_date", "description", "partner_id"],
          "order": "priority desc, create_date asc", "limit": limit, "offset": offset},
     )
-    now = datetime.utcnow()
+    _register_partners(odoo, tasks)
+    now = _utcnow()
     base = odoo.cfg["ODOO_URL"]
     pscope = f" · project ~ {project!r}" if project else ""
     print(f"# 🔎 Pick-up candidates — unassigned & open{pscope} ({total} total)")
@@ -824,7 +811,8 @@ def _use_venv():
 
 def main():
     _use_venv()
-    ap = argparse.ArgumentParser(description=__doc__,
+    # allow_abbrev=False: "--ra" must not silently mean "--raw".
+    ap = argparse.ArgumentParser(description=__doc__, allow_abbrev=False,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument(
         "--env", default=os.environ.get("ODOO_ENV", "prod"),
@@ -866,6 +854,10 @@ def main():
 
     args = ap.parse_args()
 
+    # Unmasked or half-masked output only ever goes to the user's own terminal.
+    if (args.raw or args.regex_only) and not sys.stdin.isatty():
+        sys.exit("--raw and --regex-only show unmasked or half-masked personal data: "
+                 "run them in your own terminal, not in Claude.")
     if args.cmd == "setup":
         return setup(args.env)
     if args.cmd == "install-ner":
@@ -875,7 +867,7 @@ def main():
     print(f"[env: {cfg['ENV']} @ {cfg['ODOO_URL']}]", file=sys.stderr)
     odoo = Odoo(cfg)
     if not args.raw:
-        _sanitize_session(odoo, args)
+        _sanitize_session(odoo, args.regex_only)
     try:
         _run(odoo, args)
     finally:
@@ -883,32 +875,47 @@ def main():
         sys.stderr.flush()
 
 
-def _sanitize_session(odoo, args):
-    """Mask personal data in everything this run prints."""
+def _sanitize_session(odoo, regex_only):
+    """Mask personal data in everything this run prints, before any Odoo read."""
     import sanitizer
 
     san = sanitizer.Sanitizer(ner=True)
-    if not san.analyzer and not args.regex_only:
+    if not san.analyzer and not regex_only:
         sys.exit("Name detection is not installed, so names not linked to the ticket "
                  "would leak. Install it once:\n"
                  f"  python3 {os.path.abspath(__file__)} install-ner\n"
                  "or rerun with --regex-only to accept that.")
-    model = rec_id = None
-    if getattr(args, "ticket", None):
-        model, rec_id = find_ticket(odoo, args.ticket)
-    sanitizer.register_ticket_people(san, odoo, model, rec_id)
     sanitizer.protect(san)
+    odoo.san = san
+
+
+def _register_people(odoo, model=None, rec_id=None):
+    if odoo.san:
+        import sanitizer
+        sanitizer.register_ticket_people(odoo.san, odoo, model, rec_id)
+
+
+def _register_partners(odoo, records):
+    """Mask the customers of the records about to be printed."""
+    if odoo.san:
+        import sanitizer
+        sanitizer.register_partners(odoo.san, odoo, [r.get("partner_id") for r in records])
 
 
 def _run(odoo, args):
+    if args.cmd == "fetch":
+        model, rec_id = find_ticket(odoo, args.ticket, args.model)
+        if not model:
+            sys.exit(f"No ticket {args.ticket} in [{odoo.cfg['ENV']}].")
+        _register_people(odoo, model, rec_id)
+        return fetch(odoo, model, rec_id)
+    _register_people(odoo)
     if args.cmd == "whoami":
         u = odoo.execute("res.users", "read", [odoo.uid], {"fields": ["name", "login"]})[0]
         print(f"Connected as {u['name']} <{u['login']}> (uid={odoo.uid}) "
               f"on {odoo.cfg['ODOO_DB']} @ {odoo.cfg['ODOO_URL']}")
         for m in ("helpdesk.ticket", "project.task", "crm.request"):
             print(f"  model {m}: {'available' if odoo.model_exists(m) else 'not installed'}")
-    elif args.cmd == "fetch":
-        fetch(odoo, args.ticket, args.model)
     elif args.cmd == "search":
         search(odoo, args.term, args.limit)
     elif args.cmd == "list":

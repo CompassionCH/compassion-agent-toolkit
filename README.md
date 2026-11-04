@@ -162,8 +162,8 @@ agent sees it: last names, emails, phones, IBANs, AHV numbers, IPs and
 addresses become tokens like `{{NAME_1}}`; first names stay. It knows everyone
 linked to the ticket, and name detection catches the others. Tokens are
 numbered per run, so people can't be linked across tickets. The plugin never
-writes to Odoo, and a hook asks you before any unmasked read (`--raw`). To see
-what the agent would get, in your own terminal:
+writes to Odoo, and unmasked reads (`--raw`) only run in your own terminal,
+never in the agent's. To see what the agent would get, in your own terminal:
 
 ```bash
 python3 <plugin path>/scripts/sanitizer.py --dry-run T1234

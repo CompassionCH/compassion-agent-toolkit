@@ -11,7 +11,7 @@ your work-in-progress and open one. By default it hides completed tickets; `all`
 them.
 
 ```
-/ticket-list        → your OPEN tickets (hides Done/Cancelled/In Production/Complete/Rejected/Merge/User Acceptance)
+/ticket-list        → your OPEN tickets (hides closed stages, see Notes)
 /ticket-list all    → ALL your tickets, including completed
 ```
 
@@ -68,10 +68,11 @@ is `/ticket`). Don't auto-continue into another flow.
 
 ## Notes
 
-- "Completed" is a fixed stage-name set: **Done, Cancelled, In Production, Complete,
-  Rejected, Merge, User Acceptance** (English dev-project stages — your tickets live there).
-  If a French/German "done" stage ever leaks into the open list, add it to
-  `LIST_CLOSED_STAGES` in the plugin's `scripts/odoo_ticket.py`.
+- "Completed" is a fixed stage-name set shared with `/ticket-explore` and `/ticket-stats`:
+  **Done, Complete, In Production, Merge, Ready to Release, User Acceptance, Cancelled,
+  Rejected** (English dev-project stages — your tickets live there). If a French/German
+  "done" stage ever leaks into the open list, add it to `DONE_STAGES` in the plugin's
+  `scripts/odoo_ticket.py`.
 - Requires no special permissions beyond the bot account's normal read access (it reads
   your `project.task` records, not private contacts).
 - Caps at 500 tasks (more than enough for one person).

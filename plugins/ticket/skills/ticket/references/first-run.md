@@ -32,14 +32,13 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/odoo_ticket.py" install-ner
 ```
 
 It needs Python's `venv` module (on Debian/Ubuntu: `python3-venv`). If pip can't find
-wheels for a very new Python, the user reruns it with an older `python3.x` themselves. Never add
-`--regex-only` on your own: only when the user explicitly accepts weaker masking (the hook
-asks them anyway).
+wheels for a very new Python, the user reruns it with an older `python3.x` themselves. `--regex-only`
+only runs in the user's own terminal: if they accept weaker masking, they run it there.
 
 ## Masked output
 
 Read commands print last names, emails, phones and addresses as tokens like `{{NAME_1}}` /
 `{{EMAIL_1}}` (first names stay). Tokens are numbered per run: within one output the same
 token is the same person, but `{{NAME_1}}` in two different outputs are unrelated, so
-never link people across outputs by token. Never add `--raw` unless the user explicitly
-asks for unmasked data (the hook asks them).
+never link people across outputs by token. `--raw` only runs in the user's own terminal:
+if they need unmasked data, they run it there and paste what's needed.

@@ -42,7 +42,7 @@ number (e.g. fastest closer, oldest open) — but don't pad it.
 ## What the numbers mean
 
 - **Total** = every task incl. archived. **✅ done** = stages *Done / Complete / In Production
-  / Merge / Ready to Release*; **❌ cancelled** = *Cancelled / Rejected*. Both count as
+  / Merge / Ready to Release / User Acceptance*; **❌ cancelled** = *Cancelled / Rejected*. Both count as
   **closed**. **🔒 closed %** = (total − currently-open) ÷ total — only actively-open tasks
   count as "not completed".
 - **🟢 open** counts only **active** tasks (real backlog); 🔵 in-progress / 🔴 blocked are
@@ -58,8 +58,8 @@ number (e.g. fastest closer, oldest open) — but don't pad it.
 
 ## Notes
 
-- The done/cancelled stage sets live in `STATS_DONE_STAGES` / `STATS_CANCELLED_STAGES` in
-  `odoo_ticket.py` — extend if needed (e.g. localized stage names).
+- The done/cancelled stage sets live in `DONE_STAGES` / `CANCELLED_STAGES` in
+  `odoo_ticket.py`, shared with `/ticket-list` and `/ticket-explore` — extend if needed (e.g. localized stage names).
 - Pulls up to 10000 tasks in one call (current org ≈ 3.3k) and computes in Python.
 - "starred" counts tasks with a non-zero `priority` — at Compassion many tasks are starred,
   so read it as "flagged", not "rare/urgent".
