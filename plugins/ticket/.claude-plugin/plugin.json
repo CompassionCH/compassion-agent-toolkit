@@ -1,0 +1,9 @@
+{
+  "name": "ticket",
+  "version": "1.0.0",
+  "description": "Work Odoo project tickets (T####) with Claude: read them with personal data masked, then reproduce, fix and stage on your local Odoo. Read-only on the tickets.",
+  "author": { "name": "Compassion Switzerland IT" },
+  "repository": "https://github.com/CompassionCH/compassion-agent-toolkit",
+  "license": "MIT",
+  "keywords": ["odoo", "tickets", "project", "privacy", "anonymization"]
+}

@@ -24,6 +24,11 @@
       "name": "assisted-by",
       "source": "./plugins/assisted-by",
       "description": "An Assisted-by: <model id>, <effort>, claude-code trailer on every commit Claude makes."
+    },
+    {
+      "name": "ticket",
+      "source": "./plugins/ticket",
+      "description": "Odoo tickets (T####) with personal data masked: read, reproduce on your local Odoo, fix and stage. Read-only on the tickets."
     }
   ]
 }

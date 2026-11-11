@@ -30,6 +30,7 @@
       "Read(~/.ssh/id_ecdsa_sk)",
       "Read(//**/*.pem)",
       "Read(//**/*.key)",
+      "Read(~/.config/compassion-odoo/**)",
       "Bash(git push --force*)",
       "Bash(git push -f*)",
       "Bash(git push * --force*)",

@@ -6,7 +6,7 @@ one line what happened. Ask before installing anything or changing a settings
 file. Commands that need their own terminal or a browser, they run themselves:
 they can type `! <command>` in the prompt to run one in this session.
 
-Done when every try in step 7 that matches what they installed works, or the
+Done when every try in step 8 that matches what they installed works, or the
 developer has chosen to stop.
 
 ## 1. Check the basics
@@ -16,7 +16,8 @@ developer has chosen to stop.
   account).
 - `node --version` shows 22.13 or newer and `npm --version` runs. `find-docs`
   needs both (Node 22.13+), `agent-browser` both (Node 18+), `assisted-by`
-  Node 18+ only. Older or missing: the developer installs Node.js the way
+  Node 18+ only, `ticket` `python3` with its `venv` module (on Debian
+  and Ubuntu, `python3-venv`). Older or missing: the developer installs Node.js the way
   their machine manages software; offer the usual options (distribution
   package, nvm, Homebrew on macOS) and let them choose. On Debian and Ubuntu,
   npm is a package of its own.
@@ -42,6 +43,9 @@ Show them the catalog and ask which they want:
   the repository's version
 - **agent-browser**: the agent checks their local Odoo in a real Chrome
 - **assisted-by**: an `Assisted-by:` trailer on every commit the agent makes
+- **ticket**: `/ticket T####` from Odoo ticket to staged fix, plus
+  `/ticket-list`, `/ticket-explore`, `/ticket-stats`; `/t` is short for `/ticket`;
+  personal data masked
 
 Tell them the one trade-off of the bundler: while it is installed, its
 plugins stay on together; picking plugins one by one keeps each removable on
@@ -78,20 +82,45 @@ their machine manages software; no sudo. On Linux, when Chrome fails to start
 over missing system libraries, they run
 `! agent-browser install --with-deps` themselves (it may need sudo).
 
-## 6. Their Odoo repository
+## 6. The ticket connection (with ticket)
+
+The config holds an API key, so the developer runs this **in their own
+terminal**, not in this session and not with `!`. Find the script with
+`ls -d ~/.claude/plugins/cache/compassion/ticket/*/` (take the newest
+version), then hand them:
+
+```bash
+python3 <that path> setup
+```
+
+It asks for the Odoo URL, database, login and API key of the shared read-only
+account (Enter keeps `claudecode@compassion.ch`; the API key is in the team key
+vault, search for `claudecode`; you never ask for it), and their own Odoo login. Never read `~/.config/compassion-odoo/config.ini`. If a key is
+pasted into this chat, ask them to rotate it.
+
+Then, with their yes, install name detection (about 1 GB):
+
+```bash
+python3 <that path> install-ner
+```
+
+## 7. Their Odoo repository
 
 In the repository they work on, with Claude Code started there:
 
 - no `CLAUDE.md` (or `AGENTS.md`) yet → `/init`, then correct the draft
   together. **The Odoo version goes on line one**: find-docs reads it to pin
-  the docs. Add their local Odoo URL, for agent-browser.
+  the docs. Add their local Odoo URL, for agent-browser. With ticket,
+  also their app and test database names and how they run tests.
 
-## 7. Try it
+## 8. Try it
 
 - find-docs: "What does a stored computed field need in `@api.depends`, in
   Odoo `<their version>`?" → answered from the pinned docs.
 - agent-browser: "Open `<their local Odoo URL>`/web/login and take a
   screenshot." → the page shows.
+- ticket: `/ticket-list` → their open tickets, with last names as
+  `{{NAME_n}}` tokens.
 - assisted-by: in a scratch repository, ask for a commit, then
   `git log -1 --format=%B` ends with `Assisted-by: …`.
 
