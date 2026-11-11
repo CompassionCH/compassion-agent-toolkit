@@ -126,9 +126,11 @@ class Sanitizer:
         real = real.strip()
         if len(real) < 2 or (kind == "NAME" and real.lower() in ignore):
             return
-        # Letters-only boundary: masks "Lettre_Dupont.pdf", "scan-dupont.pdf",
-        # "Dupont's", but not "Dupontel".
-        rx = re.compile(rf"(?<!{L}){re.escape(real)}(?!{L})", re.IGNORECASE)
+        # Names: letters-only boundary, so "Lettre_Dupont.pdf", "scan-dupont.pdf",
+        # "Dupont's" are masked but not "Dupontel". Refs/phones also count digits,
+        # so ref "4711" stays out of "1047110".
+        b = L if kind == "NAME" else r"[^\W_]"
+        rx = re.compile(rf"(?<!{b}){re.escape(real)}(?!{b})", re.IGNORECASE)
         self.known.append((rx, kind, real))
         # Longest first so "Müller-Schmid" wins over "Müller".
         self.known.sort(key=lambda k: -len(k[2]))
@@ -312,16 +314,12 @@ class SanitizingStream:
         self.san, self.raw, self.buf = san, raw, ""
 
     def write(self, s):
+        # Held until flush (main() flushes on exit) and masked in one go, so a
+        # surname found anywhere in the output is masked everywhere in it.
         self.buf += s
-        # Up to the last newline in one go, so a surname found further down
-        # is masked above it too.
-        if "\n" in self.buf:
-            done, _, self.buf = self.buf.rpartition("\n")
-            self.raw.write(self.san.sanitize(done) + "\n")
         return len(s)
 
     def flush(self):
-        # Partial line (e.g. an input() prompt).
         if self.buf:
             self.raw.write(self.san.sanitize(self.buf))
             self.buf = ""

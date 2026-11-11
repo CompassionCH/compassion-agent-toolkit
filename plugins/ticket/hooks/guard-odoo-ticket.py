@@ -10,8 +10,8 @@ and the bot account's Odoo rights keep it read-only.
   CLI has none, but older local copies may.
 - The config folder holds the API key: Claude never reads it.
 - Commands that print personal data unmasked or half-masked (`--raw`,
-  `--regex-only`, `sanitizer.py --dry-run`) always ask the user, even in auto
-  mode.
+  `--regex-only`, `sanitizer.py --dry-run`) are blocked: the CLIs only run them
+  in the user's own terminal.
 """
 import json
 import re
@@ -36,9 +36,6 @@ if re.search(r"\.config/compassion-odoo|compassion-odoo/config", cmd):
 
 if (re.search(r"odoo_ticket\.py\b.*--(raw|regex-only)\b", cmd)
         or re.search(r"sanitizer\.py\b.*--(dry-run|regex-only)\b", cmd)):
-    print(json.dumps({"hookSpecificOutput": {
-        "hookEventName": "PreToolUse",
-        "permissionDecision": "ask",
-        "permissionDecisionReason": "This can show UNSANITIZED personal data "
-                                    "(real names, emails, phones) to Claude.",
-    }}))
+    print("Blocked: unmasked or half-masked output only runs in the user's own "
+          "terminal. Give them the command to run there.", file=sys.stderr)
+    sys.exit(2)

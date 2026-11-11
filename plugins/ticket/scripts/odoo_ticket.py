@@ -202,8 +202,7 @@ def install_ner():
 
     print(f"Installing Presidio + spaCy (EN/DE/FR/IT, about 1 GB) into {NER_VENV}")
     py = os.path.join(NER_VENV, "bin", "python")
-    if not os.path.exists(py):
-        venv.create(NER_VENV, with_pip=True)
+    venv.create(NER_VENV, with_pip=True, clear=True)
     subprocess.check_call([py, "-m", "pip", "install", "--quiet", "--upgrade", "pip"])
     subprocess.check_call([py, "-m", "pip", "install", "--quiet", *NER_PACKAGES])
     print("Done: name detection is on for every read.")
@@ -804,6 +803,8 @@ def explore(odoo, project=None, limit=15, offset=0):
 def _use_venv():
     # Name detection (Presidio/spaCy) lives in its own venv; switch into it so
     # callers can keep running plain `python3 odoo_ticket.py`.
+    if "install-ner" in sys.argv[1:]:
+        return  # it rebuilds the venv with the Python it was started with
     venv_py = os.path.join(NER_VENV, "bin", "python")
     if os.path.exists(venv_py) and os.path.realpath(sys.prefix) != os.path.realpath(NER_VENV):
         os.execv(venv_py, [venv_py, os.path.abspath(__file__)] + sys.argv[1:])
