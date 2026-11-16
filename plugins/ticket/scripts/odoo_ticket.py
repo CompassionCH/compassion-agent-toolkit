@@ -36,8 +36,8 @@ from html.parser import HTMLParser
 # instance. Allow generous time, but don't hang forever.
 socket.setdefaulttimeout(180)
 
-CONFIG_DIR = os.path.join(
-    os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "compassion-odoo")
+# Fixed path: the managed deny rule only covers ~/.config/compassion-odoo.
+CONFIG_DIR = os.path.expanduser("~/.config/compassion-odoo")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.ini")
 NER_VENV = os.path.join(
     os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share"),
@@ -264,6 +264,14 @@ class Odoo:
             return True
         except Exception:
             return False
+
+
+def _short(odoo, text, n):
+    """Mask first, then shorten, so a cut never splits an email or a phone."""
+    text = " ".join((text or "").split())
+    if odoo.san:
+        text = odoo.san.sanitize(text)
+    return text if len(text) <= n else text[:n - 1] + "…"
 
 
 def _name(val):
@@ -494,9 +502,7 @@ def list_tickets(odoo, show_all=False, assignee=None):
         print(f"\n## {stage} ({len(rows)})")
         for t in sorted(rows, key=row_key):
             code = t.get("code") or f"#{t['id']}"
-            title = " ".join((t.get("name") or "").split())
-            if len(title) > 70:
-                title = title[:69] + "…"
+            title = _short(odoo, t.get("name"), 70)
             proj = _name(t.get("project_id"))
             pr = _priority(t)
             stars = PRIORITY_STARS[str(pr)]
@@ -782,14 +788,10 @@ def explore(odoo, project=None, limit=15, offset=0):
             pr = 0
         stars = "⭐" * pr if pr else "☆"
         code = t.get("code") or f"#{t['id']}"
-        title = " ".join((t.get("name") or "").split())
-        if len(title) > 80:
-            title = title[:79] + "…"
+        title = _short(odoo, t.get("name"), 80)
         cd = _parse_dt(t.get("create_date"))
         age = f"{(now - cd).days}d" if cd else "?"
-        snip = " ".join(html_to_text(t.get("description")).split())
-        if len(snip) > 140:
-            snip = snip[:139] + "…"
+        snip = _short(odoo, html_to_text(t.get("description")), 140)
         print(f"- {stars} **{code}** · {title} · _{_name(t.get('project_id'))}_ · "
               f"{age} · [{_name(t.get('stage_id'))}]")
         if snip:

@@ -90,7 +90,7 @@ terminal**, not in this session and not with `!`. Find the script with
 version), then hand them:
 
 ```bash
-python3 <that path> setup
+python3 <that path>/scripts/odoo_ticket.py setup
 ```
 
 It asks for the Odoo URL, database, login and API key of the shared read-only
@@ -101,7 +101,7 @@ pasted into this chat, ask them to rotate it.
 Then, with their yes, install name detection (about 1 GB):
 
 ```bash
-python3 <that path> install-ner
+python3 <that path>/scripts/odoo_ticket.py install-ner
 ```
 
 ## 7. Their Odoo repository

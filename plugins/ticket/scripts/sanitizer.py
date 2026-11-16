@@ -65,14 +65,17 @@ LABEL_WORDS = {
     "step", "option", "details", "support", "team", "finance",
 }
 CAP_RUN = re.compile(r"[A-ZÀ-Þ][\wÀ-ÿ'’-]*(?:[ \t]+[A-ZÀ-Þ][\wÀ-ÿ'’-]*)*")
-# Words the NER models like to mistake for people in our tickets.
-NER_IGNORE = {
-    "odoo", "compassion", "gmc", "mycompassion", "postfinance", "twint", "mandrill",
-    "mailchimp", "wordpress", "claude", "github", "sponsor", "sponsorship", "pate",
-    "patin", "parrain", "marraine", "padrino", "madrina",
+TITLES = {
     "frau", "herr", "mrs", "mr", "mrs.", "mr.", "ms", "ms.", "dr", "dr.",
     "madame", "monsieur", "mme", "m.", "mlle", "signora", "signor", "signore",
     "sig.", "sig.ra",
+}
+# Words the NER models like to mistake for people in our tickets.
+NER_IGNORE = {
+    *TITLES,
+    "odoo", "compassion", "gmc", "mycompassion", "postfinance", "twint", "mandrill",
+    "mailchimp", "wordpress", "claude", "github", "sponsor", "sponsorship", "pate",
+    "patin", "parrain", "marraine", "padrino", "madrina",
     "firefox", "chrome", "safari", "edge", "android", "iphone", "ipad", "ios",
     "windows", "outlook", "gmail", "excel", "word", "pdf", "zoom", "teams", "slack",
     "rechnung", "zahlung", "spende", "brief", "facture", "paiement", "lettre",
@@ -221,6 +224,10 @@ class Sanitizer:
                 # Not propagated: lone capitalized words are often false hits
                 # ("Stage", "Test") and would get masked everywhere.
                 new = self.token("NAME", span)
+                # Unless a title comes just before it: "Madame Keller".
+                before = text[max(0, start - 15):start].split()
+                if before and before[-1].lower() in TITLES:
+                    self._add_known("NAME", span, ignore=NER_IGNORE)
             text = text[:start] + new + text[end:]
         return text
 
@@ -391,6 +398,7 @@ def main():
         sys.exit("Name detection is not installed: run odoo_ticket.py install-ner, "
                  "or rerun with --regex-only to accept weaker masking.")
     if args.ticket:
+        sys.stderr = SanitizingStream(san, sys.stderr)
         text, (odoo, model, rec_id) = fetch_ticket_text(args.ticket, args.env)
         register_ticket_people(san, odoo, model, rec_id)
     else:
