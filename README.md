@@ -15,6 +15,8 @@ for **Claude Code**. Two layers:
 | `agent-browser` | The agent checks its work in your local Odoo through a real Chrome: screenshots, console errors, forms |
 | `assisted-by` | Every commit the agent makes ends with `Assisted-by: <model id>, <effort>, <harness>` |
 | `ticket` | `/ticket T####` takes an Odoo ticket from report to staged fix on your local Odoo; plus `/ticket-list`, `/ticket-explore`, `/ticket-stats`, and `/t` for short. Personal data in tickets is masked before the agent sees it |
+| `code-rules` | Compassion's code rules, one file per subject, opened only when a change needs it; records architecture decisions (ADRs); a read-only rules review before each PR |
+| `odoo-rules` | The Odoo rules on top of `code-rules`: access rights, side effects in transactions, translations. Installs `code-rules` too |
 
 The catalog is a common floor, not anyone's personal setup.
 
@@ -54,6 +56,14 @@ The catalog is a common floor, not anyone's personal setup.
 
 ```
 /plugin install ticket@compassion
+```
+
+```
+/plugin install code-rules@compassion
+```
+
+```
+/plugin install odoo-rules@compassion
 ```
 
 **Or let your agent do it.** Paste this into a new Claude Code session; it
@@ -211,6 +221,11 @@ Paste [`admin/managed-settings.json`](admin/managed-settings.json) in claude.ai
   private SSH keys, `*.pem`, `*.key`, the `ticket` config;
 - **denies** force-pushes; plain pushes stay allowed;
 - switches off Claude Code's `Co-Authored-By` line;
+- makes Claude Code read each repository's `AGENTS.md` together with its
+  `CLAUDE.md` (**Project instructions** = `claude-md-and-agents-md`, set under
+  `cc-plugin-agents-md@builtin`, and under `agents-md@builtin` for clients
+  before v2.1.285). Without it, a `CLAUDE.md` or `CLAUDE.local.md` hides the
+  repository's `AGENTS.md`;
 - sets `managedSourcesBehavior` to `merge`: a machine that also has an MDM
   profile or a local `managed-settings.json` applies those too, combined with
   this policy (lists union, the strictest lock wins), instead of ignoring them.

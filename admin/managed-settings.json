@@ -15,6 +15,18 @@
   "enabledPlugins": {
     "compassion-agent-toolkit@compassion": false
   },
+  "pluginConfigs": {
+    "cc-plugin-agents-md@builtin": {
+      "options": {
+        "instructionFiles": "claude-md-and-agents-md"
+      }
+    },
+    "agents-md@builtin": {
+      "options": {
+        "instructionFiles": "claude-md-and-agents-md"
+      }
+    }
+  },
   "permissions": {
     "deny": [
       "Read(//**/odoo.conf)",

@@ -46,6 +46,10 @@ Show them the catalog and ask which they want:
 - **ticket**: `/ticket T####` from Odoo ticket to staged fix, plus
   `/ticket-list`, `/ticket-explore`, `/ticket-stats`; `/t` is short for `/ticket`;
   personal data masked
+- **code-rules**: Compassion's code rules, opened per subject when a change
+  needs them, an ADR recorder, and a read-only rules review before each PR
+- **odoo-rules**: the Odoo rules (access rights, side effects in
+  transactions, translations); brings code-rules with it
 
 Tell them the one trade-off of the bundler: while it is installed, its
 plugins stay on together; picking plugins one by one keeps each removable on

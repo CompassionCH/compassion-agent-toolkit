@@ -29,6 +29,16 @@
       "name": "ticket",
       "source": "./plugins/ticket",
       "description": "Odoo tickets (T####) with personal data masked: read, reproduce on your local Odoo, fix and stage. Read-only on the tickets."
+    },
+    {
+      "name": "code-rules",
+      "source": "./plugins/code-rules",
+      "description": "Compassion's code rules, read per subject when a change needs them, an ADR recorder, and a read-only rules review before each PR."
+    },
+    {
+      "name": "odoo-rules",
+      "source": "./plugins/odoo-rules",
+      "description": "The Odoo code rules on top of code-rules: access rights, side effects in transactions, translations."
     }
   ]
 }
