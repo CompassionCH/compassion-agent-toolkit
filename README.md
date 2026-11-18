@@ -140,9 +140,14 @@ numbers.
   the catalog, the bundler's update installs it; nothing to do. If you picked
   plugins one by one, install new ones from **Discover** when you want them.
 - **Remove or pause a plugin:** `/plugin` → **Installed** → **Uninstall** or
-  **Disable**. The bundler's plugins stay on together: to drop one, uninstall
-  the bundler first (its plugins stay installed), then the one you don't
-  want.
+  **Disable**. Remove a plugin only after the plugins that depend on it: the
+  bundler depends on all the others, and `odoo-rules` on `code-rules`.
+  - **With the bundler:** uninstall the bundler first, then the one you don't
+    want. Its plugins stay installed; skip the `claude plugin prune` it then
+    suggests, which would remove them all.
+  - **`code-rules`:** keeping `odoo-rules` means keeping `code-rules`. To drop
+    `code-rules`, uninstall the bundler if you have it, then `odoo-rules`,
+    then `code-rules`.
 - **For a whole repository:** run this in the repository, then commit
   `.claude/settings.json`. Everyone opening the repository is offered the
   plugin.
@@ -225,7 +230,8 @@ Paste [`admin/managed-settings.json`](admin/managed-settings.json) in claude.ai
   `CLAUDE.md` (**Project instructions** = `claude-md-and-agents-md`, set under
   `cc-plugin-agents-md@builtin`, and under `agents-md@builtin` for clients
   before v2.1.285). Without it, a `CLAUDE.md` or `CLAUDE.local.md` hides the
-  repository's `AGENTS.md`;
+  repository's `AGENTS.md`. It overrides each developer's own choice in
+  `/config`, and needs Claude Code v2.1.277 or later;
 - sets `managedSourcesBehavior` to `merge`: a machine that also has an MDM
   profile or a local `managed-settings.json` applies those too, combined with
   this policy (lists union, the strictest lock wins), instead of ignoring them.
@@ -259,6 +265,18 @@ claude --plugin-dir ./plugins                             # try them locally
 **Releasing = bump that plugin's `version` and push.** Without a new version,
 nobody receives the change. Changes to `admin/managed-settings.json` apply
 once the workspace owner pastes them.
+
+**Plugins that other tools read by URL** (`code-rules`, `odoo-rules`) also get
+a tag on each release: `<plugin>--v<version>`, for example
+`code-rules--v1.0.0`. Once the release is on `main`, check out that commit
+with a clean tree, and run this from the plugin's folder:
+
+```bash
+claude plugin tag --push
+```
+
+It takes the version from `plugin.json`, checks that the marketplace entry
+agrees, tags `HEAD` and pushes the tag. `--dry-run` shows what it would do.
 
 **Adding a plugin:**
 
