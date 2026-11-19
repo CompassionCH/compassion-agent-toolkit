@@ -12,8 +12,8 @@
 // subagent's transcript), the effort from the hook input's `effort.level`
 // (a subagent's own transcript first; CLAUDE_EFFORT as a fallback).
 // The trailer goes right after the first `git commit` that starts a command
-// (`git add … && git commit …`, heredoc messages); a `git commit` inside quoted
-// text is left alone. Trailers already in the command or its message credit
+// (`git add … && git commit …`, heredoc messages, `sh -c '…'`); other mentions
+// of `git commit`, such as a quoted test operand, are left alone. Trailers already in the command or its message credit
 // other agents that drafted part of the change, and are kept. The hook adds
 // this agent's line unless that exact line is already in the command, in the
 // trailers of a `-F` message file, or in the message an amend or `-C` keeps. With git's default trailer settings, that gives one line per
@@ -134,7 +134,7 @@ function keptMessages(command, commitAt, cwd) {
     } catch {}
   }
   const reuse = args.match(/(?:\s-[cC]\s*|\s--re(?:use|edit)-message[=\s]\s*)([^\s;&|'"]+)/)
-  const newMessage = /\s(-m|--message|-F|--file)\b/.test(args)
+  const newMessage = /\s(?:-[A-Za-z]*[mF]|--message\b|--file\b)/.test(args) // also -am, -sm, -Fmsg
   const rev = reuse ? reuse[1] : (/\s--amend\b/.test(args) && !newMessage ? 'HEAD' : null)
   if (rev) {
     try {
@@ -145,10 +145,11 @@ function keptMessages(command, commitAt, cwd) {
 }
 
 // The first `git commit` at the start of a command: the start of the input,
-// after a separator, `then`, `do` or variable assignments, or opening the
-// command a shell runs (`sh -c '…'`, `rebase --exec '…'`, `foreach '…'`).
-// Never inside other quoted text.
-const COMMIT = /(^|[;&|(\n]\s*|\b(?:then|do|else)\s+|(?:\b(?:ba|z)?sh\s+-c|\s--exec[=\s]|\s-x|\bforeach(?:\s+--recursive)?)\s*['"]\s*)((?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*)git(\s+)commit(?=\s|$|;|&|\||['"])/
+// after a separator, a keyword such as `then` or `if`, `env` or variable
+// assignments, or opening the command a shell runs (`sh -c '…'`,
+// `rebase --exec '…'`, `foreach '…'`). The hook does not parse shell quoting,
+// so quoted text that itself looks like a command start is rewritten too.
+const COMMIT = /(^\s*|[;&|(\n{!]\s*|\b(?:then|do|else|if|while|until|time|command|exec)\s+|(?:\b(?:ba|z)?sh\s+-\w*c|\s--exec[=\s]|\s-x|\bforeach(?:\s+--recursive)?)\s*['"]\s*)((?:env\s+)?(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*)git(\s+)commit(?=\s|$|;|&|\||['"])/
 
 const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
@@ -162,8 +163,9 @@ process.stdin.on('end', () => {
     const at = command.match(COMMIT)
     if (!at) return
 
-    // No value may carry a quote, a backslash or a line break into the command.
-    const clean = (v) => String(v).replace(/['"\\\n\r]/g, '')
+    // Values keep only the characters model ids and efforts use, so nothing in
+    // them can be read by a shell, however many quoting layers wrap the commit.
+    const clean = (v) => String(v).replace(/[^A-Za-z0-9._:@+\/\[\]-]/g, '')
     const found = caller(input.transcript_path, input.tool_use_id)
     const model = clean(found.model || 'unknown')
     const effort = clean(found.effort || (input.effort && input.effort.level) || process.env.CLAUDE_EFFORT || 'unknown')
@@ -172,7 +174,8 @@ process.stdin.on('end', () => {
     const value = `${escape(model)}\\s*,\\s*${escape(effort)}\\s*,\\s*claude-code`
     const inCommand = new RegExp(`Assisted-by:\\s*${value}(?=\\s*(?:$|["'\\n]))`, 'im')
     const inMessage = new RegExp(`^Assisted-by:\\s*${value}\\s*$`, 'im')
-    if (inCommand.test(command) || keptMessages(command, at.index, input.cwd).some((t) => inMessage.test(t))) return
+    const trailerBlock = (text) => text.trim().split(/\n\s*\n/).pop() || ''
+    if (inCommand.test(command) || keptMessages(command, at.index, input.cwd).some((t) => inMessage.test(trailerBlock(t)))) return
 
     // Backslash-escaped, not quoted: it stays one literal word in a plain
     // command and inside the quotes of `sh -c '…'` or `sh -c "…"`.
