@@ -46,10 +46,20 @@ Show them the catalog and ask which they want:
 - **ticket**: `/ticket T####` from Odoo ticket to staged fix, plus
   `/ticket-list`, `/ticket-explore`, `/ticket-stats`; `/t` is short for `/ticket`;
   personal data masked
+- **code-rules**: Compassion's code rules, opened per subject when a change
+  needs them, an ADR recorder, and a read-only rules review before each PR
+- **odoo-rules**: the Odoo rules (access rights, side effects in
+  transactions, translations); brings code-rules with it
 
-Tell them the one trade-off of the bundler: while it is installed, its
-plugins stay on together; picking plugins one by one keeps each removable on
-its own. With their yes, install their choice, for example:
+Tell them the trade-offs:
+
+- While the bundler is installed, its plugins stay on together.
+- Picking plugins one by one keeps each removable on its own, except
+  `code-rules`, which `odoo-rules` needs.
+- To remove a plugin, first uninstall what depends on it: the bundler if they
+  have it, and for `code-rules`, `odoo-rules` too.
+
+With their yes, install their choice, for example:
 
 ```bash
 claude plugin install compassion-bundler@compassion
@@ -123,6 +133,10 @@ In the repository they work on, with Claude Code started there:
   `{{NAME_n}}` tokens.
 - assisted-by: in a scratch repository, ask for a commit, then
   `git log -1 --format=%B` ends with `Assisted-by: …`.
+- code-rules: in their repository, "Which rules apply before I open a PR
+  here?" → the agent opens `code-rules:rules` and names the rules review.
+- odoo-rules: "Which catalogs must a new string in one of this repository's
+  modules go into?" → the agent opens `odoo-rules:rules` (translations).
 
 Close with the three habits: read every diff as if a colleague wrote it; give
 Claude a way to check itself (a test, the browser, the Odoo log); one task per
