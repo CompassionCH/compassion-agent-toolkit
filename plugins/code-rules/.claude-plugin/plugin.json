@@ -1,6 +1,6 @@
 {
   "name": "code-rules",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Compassion's shared code rules, one file per subject read only when a change needs it, an ADR recorder, and a read-only rules review before each pull request.",
   "author": { "name": "Compassion Switzerland IT" },
   "repository": "https://github.com/CompassionCH/compassion-agent-toolkit",
