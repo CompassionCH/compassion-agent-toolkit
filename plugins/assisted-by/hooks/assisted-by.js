@@ -13,8 +13,11 @@
 // input's `effort.level` (CLAUDE_EFFORT as a fallback).
 // The trailer goes right after the first `git commit` in the command, so chained
 // commands (`git add … && git commit …`) and heredoc messages keep working.
-// A command that already carries an Assisted-by trailer is left alone, and
-// any failure leaves the command untouched: the hook never blocks a commit.
+// Trailers already in the command credit other agents that drafted part of
+// the change; they are kept, and this model's trailer is added before them.
+// A command that already names this model, or that names any agent while
+// this model is unknown, is left alone. Any failure leaves the command
+// untouched: the hook never blocks a commit.
 
 const fs = require('fs')
 const path = require('path')
@@ -92,9 +95,11 @@ process.stdin.on('end', () => {
     const input = JSON.parse(raw)
     const command = input.tool_input && input.tool_input.command
     if (typeof command !== 'string' || !/\bgit\s+commit(?=\s|$|;|&|\|)/.test(command)) return
-    if (/Assisted-by:/i.test(command)) return
 
     const model = transcriptModel(input.transcript_path, input.tool_use_id) || 'unknown'
+    const escaped = model.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    if (new RegExp(`Assisted-by:\\s*${escaped}\\s*,`, 'i').test(command)) return
+    if (model === 'unknown' && /Assisted-by:/i.test(command)) return
     const effort = (input.effort && input.effort.level) || process.env.CLAUDE_EFFORT || 'unknown'
     const trailer = `Assisted-by: ${model}, ${effort}, claude-code`
     const updated = command.replace(/\bgit(\s+)commit(?=\s|$|;|&|\|)/, `git$1commit --trailer "${trailer}"`)

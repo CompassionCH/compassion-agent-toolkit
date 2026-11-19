@@ -205,9 +205,14 @@ Assisted-by: claude-opus-5-5, high, claude-code
 
 It says AI helped while a human stays the author, in line with the OCA's AI
 policy. A hook adds it from what Claude Code records, so it never depends on
-the agent remembering, and skips commits that already have one. It costs
-nothing in context and never blocks a commit. Unknown values read `unknown`.
-To count them:
+the agent remembering. It costs nothing in context and never blocks a commit.
+Unknown values read `unknown`.
+
+When another agent drafted part of the change, add its line to the commit
+yourself, with the values its own tool recorded, for example
+`--trailer "Assisted-by: gpt-5-codex, high, codex"`. The hook keeps it and
+still adds the committing model's line. It skips only a commit that already
+names the committing model. To count them:
 
 ```bash
 git log --format='%(trailers:key=Assisted-by,valueonly,separator=)' | grep . | sort | uniq -c
