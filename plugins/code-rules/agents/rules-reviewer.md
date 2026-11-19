@@ -20,7 +20,7 @@ The caller gives you:
 
 1. the repository path, the scope (committed work, or the working tree as a snapshot), and the resolved base and head commits;
 2. the whole diff from the merge base, with the full text of new untracked files, inline or as file paths;
-3. the trusted rules as local paths: published folders, each with a `SKILL.md` index, and their revision (the plugin's version, or the toolkit commit); for an ADR change, the `adr` skill folder too;
+3. the trusted rules as local paths: published folders, each with a `SKILL.md` index; for an ADR change, the `adr` skill folder too;
 4. the source roots the code depends on (framework, other repositories), and the known readers of any shared state it alters, with their revisions;
 5. the merge-base version of every rule file, reviewer prompt, ADR or `AGENTS.md` the diff edits or deletes, and the names of those it adds;
 6. the test evidence: commands, results, and which tests fail without the change.
@@ -67,4 +67,4 @@ What you could not check, and why: a missing input, an unreadable repository or 
 
 ### Rules used
 
-The revision of the published rules you were given ("not given" when missing), the rule files and ADRs you judged by with their paths, which were base versions, and which files you treated as proposals.
+The rule files and ADRs you judged by, with their paths, which were base versions, and which files you treated as proposals.
