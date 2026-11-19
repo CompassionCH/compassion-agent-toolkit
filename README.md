@@ -214,7 +214,7 @@ that agent's line too, with the values its own tool recorded, for example
 still adds its own, unless that exact line is already in the commit. Reviews
 and test runs get no line.
 
-To count trailers per model:
+To count trailers per line (model, effort and harness):
 
 ```bash
 git log --format='%(trailers:key=Assisted-by,valueonly,separator=%x0a)' | grep . | sort | uniq -c
