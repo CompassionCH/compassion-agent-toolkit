@@ -266,17 +266,10 @@ claude --plugin-dir ./plugins                             # try them locally
 nobody receives the change. Changes to `admin/managed-settings.json` apply
 once the workspace owner pastes them.
 
-**Plugins that other tools read by URL** (`code-rules`, `odoo-rules`) also get
-a tag on each release: `<plugin>--v<version>`, for example
-`code-rules--v1.0.0`. Once the release is on `main`, check out that commit
-with a clean tree, and run this from the plugin's folder:
-
-```bash
-claude plugin tag --push
-```
-
-It takes the version from `plugin.json`, checks that the marketplace entry
-agrees, tags `HEAD` and pushes the tag. `--dry-run` shows what it would do.
+**Plugins that other tools read by URL** (`code-rules`, `odoo-rules`): the
+repositories' `AGENTS.md` send agents without the plugin to these files on
+`main`, so a merge reaches those agents at once. Merge a change to them with its
+version bump, so Claude Code users receive it too.
 
 **Adding a plugin:**
 
