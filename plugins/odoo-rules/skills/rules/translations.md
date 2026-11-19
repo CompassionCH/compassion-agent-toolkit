@@ -5,7 +5,7 @@
 Keep English in the source strings. The repositories reject `en.po` in pre-commit. Ship translations of every new or changed user-facing string in the same PR.
 
 - If the module has catalogs, update **every existing locale**, including for a country-specific module. Keep the filenames. Odoo loads the base language before its regional variant.
-- For a module's first catalogs, use the locales in the repo's `AGENTS.md` for each country that installs **that module**. For a country-specific module, use only its country's locales.
+- For a module's first catalogs, use the locales in the repo's `AGENTS.md` for each country that installs **that module**. For a country-specific module, use its country's locales, plus those the repo's `AGENTS.md` names for another office that its deployment hosts.
 
 ## Work from a fresh export
 
