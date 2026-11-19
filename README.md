@@ -27,7 +27,7 @@ The catalog is a common floor, not anyone's personal setup.
 >
 > - `find-docs`, `agent-browser`: Node.js 22.13+ and npm (on Debian and
 >   Ubuntu, npm is a package of its own)
-> - `assisted-by`: Node.js 22.13+
+> - `assisted-by`: Node.js 18+
 > - `ticket`: Python 3 with `venv` (on Debian and Ubuntu, `python3-venv`)
 >
 > A plugin missing its Node.js warns when a session starts.
@@ -208,14 +208,16 @@ policy. A hook adds it from what Claude Code records, so it never depends on
 the agent remembering. It costs nothing in context and never blocks a commit.
 Unknown values read `unknown`.
 
-When another agent drafted part of the change, add its line to the commit
-yourself, with the values its own tool recorded, for example
+When another agent drafted part of the change, have the committing agent pass
+that agent's line too, with the values its own tool recorded, for example
 `--trailer "Assisted-by: gpt-5-codex, high, codex"`. The hook keeps it and
-still adds the committing model's line. It skips only a commit that already
-names the committing model. To count them:
+still adds its own, unless that exact line is already in the commit. Reviews
+and test runs get no line.
+
+To count trailers per model:
 
 ```bash
-git log --format='%(trailers:key=Assisted-by,valueonly,separator=)' | grep . | sort | uniq -c
+git log --format='%(trailers:key=Assisted-by,valueonly,separator=%x0a)' | grep . | sort | uniq -c
 ```
 
 ## For the workspace owner
