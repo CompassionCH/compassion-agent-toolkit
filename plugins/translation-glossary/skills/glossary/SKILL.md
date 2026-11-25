@@ -5,8 +5,8 @@ description: >-
   anything Compassion says, in software or in communications (interface
   strings, .po catalogs, emails, letters, newsletters, web or social copy), in
   German, French, Italian, Swedish, Norwegian, Danish, Finnish or Polish; when
-  choosing a word for sponsor, sponsorship, gift or donation; when reviewing a
-  translation; or when adding a language.
+  choosing the word for sponsor, sponsorship, gift or donation in one of these
+  languages; when reviewing a translation; or when adding a language.
 ---
 
 # Compassion translation glossary
@@ -22,11 +22,11 @@ Read the whole file before writing a word. Its tables are short, and the traps s
 | German, Swiss French, Italian (`de`, `fr_CH`, `it`) | `reference/ch.md` |
 | Swedish, Norwegian, Danish, Finnish (`sv_SE`, `nb_NO`, `da_DK`, `fi_FI`) | `reference/nordic.md` |
 | Polish (`pl_PL`) | `reference/pl.md` |
-| any other language | `reference/new-language.md`: derive a glossary first, and stop for a human's approval before translating |
+| any other target language (English needs none) | `reference/new-language.md`: derive a glossary first, and stop for a human's approval before translating |
 
 The paths are relative to this file's folder, `${CLAUDE_SKILL_DIR}`.
 
-When translating, also read what already exists in the target language for the same text or product: the other locales of the module, last year's version of the letter, the office's published pages. The English is the source, not the authority. The other languages carry the brand's decisions.
+When translating, also read what already exists in the target language for the same text or product: the other locales of the module, last year's version of the letter, the office's published pages. The English is the source, not the authority. The other languages carry the brand's word choices: take terms from them, not sentence structure or meaning, since they contain adaptations and known errors (see each reference's traps).
 
 ## 2. The rules every language follows
 
@@ -42,7 +42,7 @@ When translating, also read what already exists in the target language for the s
 
 **Register follows the reader.** Field labels, model names and admin help are impersonal noun phrases. Text a supporter reads (a page, a button, an email, a letter) addresses them in the language's settled form.
 
-**Unchanged in every language:** `Compassion`, `MyCompassion` / `My Compassion` (mirror the form the source uses), `Write&Pray`, `S2B`, payment brands (`Visa`, `Mastercard`). In software, also leave every placeholder (`%s`, `{child_name}`, `#{...}`), every tag and attribute, entities, route paths, and leading and trailing spaces exactly as in the source; translate the visible text and the `title`, `alt` and `aria-label` values.
+**Unchanged in every language:** `Compassion`, `MyCompassion` / `My Compassion` (mirror the form the source uses), `Write&Pray`, `S2B`, payment brands (`Visa`, `Mastercard`), units and file types (`°C`, `jpeg/png/webp`). In software, also leave every placeholder (`%s`, `{child_name}`, `#{...}`), every tag and attribute, entities, route paths, and leading and trailing spaces exactly as in the source; translate the visible text and the `title`, `alt` and `aria-label` values. Many strings are fragments that get a value (often a name) inserted at runtime, which the code cannot inflect: in languages with cases, choose a phrasing that works with the value uninflected; a colon before the slot is a clean escape.
 
 **Check meanings that look obvious.** Short source strings mislead: in the MyCompassion portal "Code" is the postal code and "Coordinates" means contact details (French *coordonnées*). When a short string is ambiguous, open its context (the template, the form, the surrounding paragraph) before translating it.
 

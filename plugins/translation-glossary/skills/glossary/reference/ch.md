@@ -1,6 +1,6 @@
 # Switzerland: German, Swiss French, Italian (`de`, `fr_CH`, `it`)
 
-The terms Compassion Switzerland uses, taken from its existing translations (the MyCompassion portal and its communications).
+The terms Compassion Switzerland uses, taken from its existing translations of the MyCompassion portal.
 
 Supporter copy in these three languages is often **adapted rather than translated**: a marketing sentence is rewritten for the reader. Take the terms from the tables below, and write each sentence the way the language says it, not the way the English or another language built it.
 

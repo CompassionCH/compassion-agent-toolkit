@@ -42,11 +42,11 @@ Look for a precedent before coining: a well-known charity in that country using 
 
 ## 4. Decide the form of address
 
-Where the language has a formal/informal choice, decide it explicitly, from these sources, best first:
+Where the language has a formal/informal choice, decide it explicitly, from these sources:
 
-1. **Odoo's own translation** for that language, in its `portal`, `website` and `auth_signup` modules: what users of any Odoo product already see. It reversed a wrong first guess for Polish.
-2. **Donor-facing copy** of charities in that country.
-3. **Published style guides** for the language (Microsoft and Google publish one per language).
+- **Donor-facing copy** of charities in that country: what supporters already read.
+- **For software, Odoo's own translation** for that language, in its `portal`, `website` and `auth_signup` modules: what users of any Odoo product already see. It reversed a wrong first guess for Polish.
+- **Published style guides** for the language (Microsoft and Google publish one per language).
 
 Then check the grammatical cost: a formal register may force gender agreement the text cannot resolve.
 
@@ -56,7 +56,7 @@ Gendered verb forms where the subject's gender is unknown; more plural forms tha
 
 ## 6. Write the draft and stop
 
-Write the draft in the shape of `pl.md`:
+Write the draft in the conversation or in the working project, never in this folder, in the shape of `pl.md`:
 
 1. the core term family, and where each form is used;
 2. **rejected alternatives, each with its reason**: the most valuable part, because it stops the next person reopening a settled question;

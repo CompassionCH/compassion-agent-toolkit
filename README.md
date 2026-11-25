@@ -194,7 +194,8 @@ communication team's reviews.
 - **Chat and Cowork:** **Customize → Plugins → Add marketplace**, enter
   `CompassionCH/compassion-agent-toolkit`, then install
   `translation-glossary` on its own. Install it directly: the bundler relies on
-  plugin dependencies, which only Claude Code supports.
+  plugin dependencies, which only Claude Code supports. Nothing else in the
+  Install section applies there: no Claude Code, Node.js or restart needed.
 
 ## find-docs and Context7
 

@@ -45,7 +45,7 @@ Direct-address pronouns are **capitalised**: `Ty, Ciebie, Tobie, Cię, Ci, Twój
 - Polish NGO donor copy (SOS, Caritas, Salezjanie, Maitri, UNICEF, Szlachetna Paczka) capitalises almost unanimously.
 - The Microsoft Polish style guide prescribes it; the Rada Języka Polskiego calls it *"nie tylko poprawne, ale wręcz wskazane"*.
 
-Backend strings (field labels, model names) stay impersonal noun phrases, with no second person.
+Backend strings (field labels, model names) stay impersonal noun phrases, with no second person. Wherever a text does address the reader, help text included, the capitals apply.
 
 ## Money: three distinct words
 
@@ -89,7 +89,7 @@ Backend strings (field labels, model names) stay impersonal noun phrases, with n
 
 ## Traps
 
-- Timeline labels would need gendered past-tense verbs. Write them as **noun phrases**: `Otrzymany prezent`, `Dotarł twój list`, `Nowy list do ciebie`, `Początek patronatu`.
+- Timeline labels would need gendered past-tense verbs. Write them as **noun phrases**: `Otrzymany prezent`, `Dotarł Twój list`, `Nowy list do Ciebie`, `Początek patronatu`.
 - A string ending in a preposition is followed by a child's name that Polish cannot inflect. The children's names are mostly non-Slavic and stay undeclined, so use the natural case and leave the name as it is.
 - The sponsorship-search filters (`I'd like to sponsor a`, `Between the ages of`, `Who lives in`) are three **separate** headings, not one sentence. Translate them as standalone labels, so the gender buttons (`Chłopiec` / `Dziewczynka`) stay nominative.
 - **"Either"** is the boy-or-girl filter option: `Obojętnie`.
