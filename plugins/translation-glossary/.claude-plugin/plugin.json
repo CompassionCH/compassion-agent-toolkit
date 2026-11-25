@@ -1,0 +1,9 @@
+{
+  "name": "translation-glossary",
+  "version": "1.0.0",
+  "description": "Compassion's agreed words in each language (sponsorship, gifts, donations, form of address), for translating or writing interface text, letters, emails, newsletters and web copy.",
+  "author": { "name": "Compassion Switzerland IT" },
+  "repository": "https://github.com/CompassionCH/compassion-agent-toolkit",
+  "license": "MIT",
+  "keywords": ["translation", "glossary", "i18n", "communication", "languages"]
+}

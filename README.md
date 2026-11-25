@@ -1,7 +1,8 @@
 # compassion-agent-toolkit
 
 Compassion Switzerland's shared setup for AI coding agents on our Odoo work,
-for **Claude Code**. Two layers:
+for **Claude Code**, plus a translation glossary for anyone writing in
+Compassion's languages. Two layers:
 
 1. **Guardrails, enforced for everyone** through managed settings: no reading
    credentials, no force-push.
@@ -17,6 +18,7 @@ for **Claude Code**. Two layers:
 | `ticket` | `/ticket T####` takes an Odoo ticket from report to staged fix on your local Odoo; plus `/ticket-list`, `/ticket-explore`, `/ticket-stats`, and `/t` for short. Personal data in tickets is masked before the agent sees it |
 | `code-rules` | Compassion's code rules, one file per subject, opened only when a change needs it; records architecture decisions (ADRs); a read-only rules review before each PR |
 | `odoo-rules` | The Odoo rules on top of `code-rules`: access rights, side effects in transactions, translations. Installs `code-rules` too |
+| `translation-glossary` | Compassion's agreed words in each language (sponsorship, gifts, donations, form of address), for translating or writing interface text, letters, emails, newsletters and web copy. Also in the Claude desktop app, see [below](#translation-glossary-in-the-claude-desktop-app) |
 
 The catalog is a common floor, not anyone's personal setup.
 
@@ -64,6 +66,10 @@ The catalog is a common floor, not anyone's personal setup.
 
 ```
 /plugin install odoo-rules@compassion
+```
+
+```
+/plugin install translation-glossary@compassion
 ```
 
 **Or let your agent do it.** Paste this into a new Claude Code session; it
@@ -161,6 +167,34 @@ numbers.
 Put the Odoo version on line one of the repository's `CLAUDE.md` (draft one
 with `/init`) or `AGENTS.md`, plus your local Odoo URL. `find-docs` pins the
 docs to that version, and `agent-browser` uses that URL.
+
+## Using `translation-glossary`
+
+Ask for the translation or the text as usual ("translate this newsletter into
+Italian", "add the new strings to the Polish catalog"): the agent opens the
+glossary for that language on its own. It holds the words only; how a file
+or tool carries the text stays with the project's own rules (`odoo-rules` for
+Odoo catalogs).
+
+Glossaries ship for German, Swiss French and Italian; Swedish, Norwegian,
+Danish and Finnish; and Polish. For another language the agent first drafts
+a glossary from the existing ones and **stops for your approval** before
+translating.
+
+At the end it lists **Glossary proposals**: missing terms it had to settle,
+and corrections a reviewer made. Send them to a toolkit maintainer, who
+updates the reference files in
+`plugins/translation-glossary/skills/glossary/reference/` from the
+communication team's reviews.
+
+### `translation-glossary` in the Claude desktop app
+
+- **Code tab:** the desktop app shares Claude Code's plugins. Install as
+  above, or **+ → Add plugins**.
+- **Chat and Cowork:** **Customize → Plugins → Add marketplace**, enter
+  `CompassionCH/compassion-agent-toolkit`, then install
+  `translation-glossary` on its own. Install it directly: the bundler relies on
+  plugin dependencies, which only Claude Code supports.
 
 ## find-docs and Context7
 
@@ -272,6 +306,10 @@ claude --plugin-dir ./plugins                             # try them locally
 **Releasing = bump that plugin's `version` and push.** Without a new version,
 nobody receives the change. Changes to `admin/managed-settings.json` apply
 once the workspace owner pastes them.
+
+**The translation glossary** grows from the communication team's reviews:
+apply their corrections and the agents' **Glossary proposals** to the reference
+files, one language group per file, and bump `translation-glossary`'s version.
 
 **Plugins that other tools read by URL** (`code-rules`, `odoo-rules`): the
 repositories' `AGENTS.md` send agents without the plugin to these files on

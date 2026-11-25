@@ -50,6 +50,8 @@ Show them the catalog and ask which they want:
   needs them, an ADR recorder, and a read-only rules review before each PR
 - **odoo-rules**: the Odoo rules (access rights, side effects in
   transactions, translations); brings code-rules with it
+- **translation-glossary**: Compassion's agreed words in each language, for
+  translating interface strings or writing communications
 
 Tell them the trade-offs:
 
@@ -137,6 +139,9 @@ In the repository they work on, with Claude Code started there:
   here?" → the agent opens `code-rules:rules` and names the rules review.
 - odoo-rules: "Which catalogs must a new string in one of this repository's
   modules go into?" → the agent opens `odoo-rules:rules` (translations).
+- translation-glossary: "How do we say 'sponsored child' in German and
+  Polish?" → the agent opens `translation-glossary:glossary` and answers
+  `Patenkind` and `Twoje dziecko` / `dziecko objęte patronatem`.
 
 Close with the three habits: read every diff as if a colleague wrote it; give
 Claude a way to check itself (a test, the browser, the Odoo log); one task per
