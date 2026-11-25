@@ -52,4 +52,4 @@ Name the gap instead of filling it. When a load-bearing word (a programme name, 
 
 ## 4. Teach the glossary what you learned
 
-When the work settled something the reference lacked (a missing term the user decided, a reviewer's correction to your wording, a contradiction with approved material, an approved new language), propose it to the glossary by pull request: follow `reference/improving.md`. The installed plugin files stay unchanged; the change goes through the toolkit repository, where the maintainers merge it after the communication team's review.
+At the end of the work, when it settled something the reference lacked (a missing term the user decided, a reviewer's correction to your wording, a contradiction with approved material, an approved new language), propose it to the glossary by pull request: follow `reference/improving.md`. The installed plugin files stay unchanged; the change goes through the toolkit repository, where the maintainers merge it after the communication team's review.
