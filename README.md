@@ -310,12 +310,15 @@ once the workspace owner pastes them.
 
 **The translation glossary** grows by pull requests that agents open, one
 point each, with the patch version bumped. Have the communication team review
-the wording before merging. When `main` already moved past the pull
-request's version, bump it again from `main`'s.
+the wording before merging. Two pull requests opened from the same version
+both bump to the same number and merge without a conflict, so before merging,
+check that the pull request's version is higher than `main`'s, and raise it if
+not.
 
-**Plugins that other tools read by URL** (`code-rules`, `odoo-rules`): the
-repositories' `AGENTS.md` send agents without the plugin to these files on
-`main`, so a merge reaches those agents at once. Merge a change to them with its
+**Plugins that other tools read from `main`** (`code-rules`, `odoo-rules`,
+and `translation-glossary`, which `odoo-rules` points to): the repositories'
+`AGENTS.md` have agents without the plugins clone this repository, or read the
+files online, so a merge reaches those agents at once. Merge a change to them with its
 version bump, so Claude Code users receive it too.
 
 **Adding a plugin:**
