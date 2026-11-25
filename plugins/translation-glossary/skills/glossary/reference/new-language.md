@@ -67,7 +67,7 @@ Write the draft in the conversation or in the working project, never in this fol
 
 Show it to the user and **stop for approval**. Name the calls you are least sure of and what would change if they are wrong. In the Polish pass, evidence overturned two of the first three calls before a single string was written.
 
-Once approved, list the new file under **Glossary proposals** (see `SKILL.md`) so the maintainers add it to the toolkit.
+Once approved, add it to the toolkit by pull request: `improving.md`.
 
 ## 7. After translating
 

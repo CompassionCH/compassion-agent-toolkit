@@ -50,12 +50,6 @@ When translating, also read what already exists in the target language for the s
 
 Name the gap instead of filling it. When a load-bearing word (a programme name, a relationship, a recurring concept) is missing from the reference, say so, propose a term with the reasons for it, and ask before using it throughout. A word coined on the fly becomes the word everyone copies.
 
-## 4. Hand back what the glossary should learn
+## 4. Teach the glossary what you learned
 
-The maintainers of `compassion-agent-toolkit` improve these references from the communication team's reviews. End the work with a short **Glossary proposals** list when any of these came up, and leave it empty otherwise:
-
-- a term you had to propose because the reference lacked it, and what was decided;
-- a correction a reviewer made to your wording, which the reference would have prevented;
-- a contradiction between the reference and existing approved material.
-
-Each entry: the language, the English, the term, and one line on why. Leave the installed plugin files unchanged: the maintainers edit the references in the toolkit repository.
+When the work settled something the reference lacked (a missing term the user decided, a reviewer's correction to your wording, a contradiction with approved material, an approved new language), propose it to the glossary by pull request: follow `reference/improving.md`. The installed plugin files stay unchanged; the change goes through the toolkit repository, where the maintainers merge it after the communication team's review.

@@ -181,11 +181,11 @@ Danish and Finnish; and Polish. For another language the agent first drafts
 a glossary from the existing ones and **stops for your approval** before
 translating.
 
-At the end it lists **Glossary proposals**: missing terms it had to settle,
-and corrections a reviewer made. Send them to a toolkit maintainer, who
-updates the reference files in
-`plugins/translation-glossary/skills/glossary/reference/` from the
-communication team's reviews.
+The glossary improves itself: when the work settles a term the glossary
+lacked, or a reviewer corrects the wording, the agent offers to open a pull
+request on this repository with the change, and opens it once you agree. It
+needs `git` and `gh` logged in to GitHub; without them (in the desktop app's
+chat, for example) it gives you the change as text for a maintainer.
 
 ### `translation-glossary` in the Claude desktop app
 
@@ -308,9 +308,10 @@ claude --plugin-dir ./plugins                             # try them locally
 nobody receives the change. Changes to `admin/managed-settings.json` apply
 once the workspace owner pastes them.
 
-**The translation glossary** grows from the communication team's reviews:
-apply their corrections and the agents' **Glossary proposals** to the reference
-files, one language group per file, and bump `translation-glossary`'s version.
+**The translation glossary** grows by pull requests that agents open, one
+point each, with the patch version bumped. Have the communication team review
+the wording before merging. When `main` already moved past the pull
+request's version, bump it again from `main`'s.
 
 **Plugins that other tools read by URL** (`code-rules`, `odoo-rules`): the
 repositories' `AGENTS.md` send agents without the plugin to these files on
