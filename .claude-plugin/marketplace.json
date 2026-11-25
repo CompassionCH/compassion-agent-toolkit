@@ -1,6 +1,6 @@
 {
   "name": "compassion",
-  "description": "Compassion Switzerland: optional Claude Code plugins for Odoo work. Install the ones you want, or compassion-bundler for all of them.",
+  "description": "Compassion Switzerland: optional Claude Code plugins for Odoo work, and a translation glossary. Install the ones you want, or compassion-bundler for all of them.",
   "owner": {
     "name": "Compassion Switzerland IT"
   },
@@ -39,6 +39,11 @@
       "name": "odoo-rules",
       "source": "./plugins/odoo-rules",
       "description": "The Odoo code rules on top of code-rules: access rights, side effects in transactions, translations."
+    },
+    {
+      "name": "translation-glossary",
+      "source": "./plugins/translation-glossary",
+      "description": "Compassion's agreed words in each language, for translating or writing interface text and communications."
     }
   ]
 }
