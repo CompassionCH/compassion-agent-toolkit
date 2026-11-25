@@ -1,6 +1,6 @@
 {
   "name": "odoo-rules",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Compassion's Odoo code rules: access rights, side effects in transactions, translations. Installs code-rules with it.",
   "author": { "name": "Compassion Switzerland IT" },
   "repository": "https://github.com/CompassionCH/compassion-agent-toolkit",
