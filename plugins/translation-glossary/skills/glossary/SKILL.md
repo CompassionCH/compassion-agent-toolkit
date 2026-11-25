@@ -30,7 +30,7 @@ When translating, also read what already exists in the target language for the s
 
 ## 2. The rules every language follows
 
-**Sponsorship is a godparent relationship.** No Compassion language uses its own cognate of "sponsor". All use a godparent word (`Pate`, `parrain`, `fadder`, `kummi`, and Polish `patron` from the same family), except Italian, which uses a support word (`sostegno`). Use the term family in the reference file, in every form: the person, the child, the relationship, the verb.
+**Sponsorship is a godparent relationship.** No Compassion language uses its own cognate of "sponsor". German, French and the Nordic languages use a godparent word (`Pate`, `parrain`, `fadder`, `kummi`), Polish a patronage word in the same spirit (`patronat`), Italian a support word (`sostegno`). Use the term family in the reference file, in every form: the person, the child, the relationship, the verb.
 
 **Sponsorship is never adoption.** Compassion refuses adoption wording for this relationship, for child-protection reasons, even where other charities in that country use it (`adopcja na odległość`, `adozione a distanza`). The same goes for words that claim legal guardianship.
 

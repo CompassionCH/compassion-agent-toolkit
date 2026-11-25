@@ -4,7 +4,7 @@ There is no official Compassion Polish glossary. This one was derived from the M
 
 ## The core term family: `patronat`
 
-`patronat` is the Polish sibling of `Pate` and `parrain`, the godparent family the other languages use.
+`patronat` carries in Polish what the godparent words carry elsewhere (`Pate`, `parrain`, `fadder`): a personal, protective bond, not a commercial sponsorship. The literal Polish godparent words (`ojciec chrzestny`, `matka chrzestna`) belong to baptism and do not fit.
 
 | EN | PL | note |
 |---|---|---|
@@ -28,7 +28,7 @@ The cost: `objąć patronatem` is slightly formal and reads institutional in war
 |---|---|
 | `sponsor` / `sponsoring` / `sponsorowane dziecko` | The loanword `sponsoring` carries a well-known pejorative sense when it is about people. |
 | `adopcja na odległość` / `adopcja serca` | The dominant term in the Polish sector, but Compassion refuses adoption wording for this relationship. |
-| `opiekun` / `podopieczny` | Statutory guardianship terms in Polish family law (Kodeks rodzinny i opiekuńczy): they claim a legal status sponsorship does not have. The same goes for `zaopiekować się dzieckiem`. |
+| `opiekun` / `podopieczny` | Care-taking words: `opiekun` is also the legal guardian of Polish family law (`opiekun prawny`, Kodeks rodzinny i opiekuńczy), and `zaopiekować się dzieckiem` means looking after the child. Both suggest a care the sponsor does not give. |
 | `wsparcie` / `wspierane dziecko` (the Italian model) | Fails on countability. "My sponsorships", "Ended sponsorships", "Number of sponsorships" need a plural count noun, and `wsparcia` is unnatural. |
 
 ## Form of address: informal `Ty`, **capitalised**
@@ -89,8 +89,8 @@ Backend strings (field labels, model names) stay impersonal noun phrases, with n
 
 ## Traps
 
-- Timeline labels would need gendered past-tense verbs. Write them as **noun phrases**: `Otrzymany prezent`, `Dotarł Twój list`, `Nowy list do Ciebie`, `Początek patronatu`.
-- A string ending in a preposition is followed by a child's name that Polish cannot inflect. The children's names are mostly non-Slavic and stay undeclined, so use the natural case and leave the name as it is.
+- Timeline labels speak from the child's side, so avoid any verb whose form depends on the child's gender. A noun phrase, or a verb agreeing with a noun, works for every child: `Otrzymany prezent`, `Dotarł Twój list` (agrees with `list`), `Nowy list do Ciebie`, `Początek patronatu`.
+- A string ending in a preposition is followed by a name the code inserts uninflected, and Polish declines names, foreign ones included: `list do Maria` is wrong, `list do Marii` is right. Rephrase so the name stands in the nominative, after a colon or as a label's value: `Adresat: Maria`.
 - The sponsorship-search filters (`I'd like to sponsor a`, `Between the ages of`, `Who lives in`) are three **separate** headings, not one sentence. Translate them as standalone labels, so the gender buttons (`Chłopiec` / `Dziewczynka`) stay nominative.
 - **"Either"** is the boy-or-girl filter option: `Obojętnie`.
 - **"From" / "To"** on the letter card are sender and recipient, followed by a name.
