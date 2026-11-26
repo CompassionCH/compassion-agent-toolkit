@@ -170,8 +170,8 @@ numbers.
     `code-rules`, uninstall the bundler if you have it, then `odoo-rules`,
     then `code-rules`.
 - **For a whole repository:** run this in the repository, then commit
-  `.claude/settings.json`. Everyone opening the repository is offered the
-  plugin.
+  `.claude/settings.json`. The committed setting turns the plugin on there;
+  each colleague runs the same command once in their clone to install it.
 
   ```bash
   claude plugin install <plugin>@compassion --scope project
