@@ -1,6 +1,6 @@
 {
   "name": "compassion",
-  "description": "Compassion Switzerland: optional Claude Code plugins for Odoo work, and a translation glossary. Install the ones you want, or compassion-bundler for all of them.",
+  "description": "Compassion Switzerland: optional Claude Code plugins for Odoo work, a translation glossary and Compassion's design system. Install the ones you want, or compassion-bundler for all of them.",
   "owner": {
     "name": "Compassion Switzerland IT"
   },
@@ -44,6 +44,14 @@
       "name": "translation-glossary",
       "source": "./plugins/translation-glossary",
       "description": "Compassion's agreed words in each language, for translating or writing interface text and communications."
+    },
+    {
+      "name": "compassion-design",
+      "source": {
+        "source": "github",
+        "repo": "CompassionCH/compassion-design"
+      },
+      "description": "Compassion's look for anything visual: colours, type, layout, website components, icons, logos and the licensed fonts. Its repository is private: Compassion staff with access only."
     }
   ]
 }

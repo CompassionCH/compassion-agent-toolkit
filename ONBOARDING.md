@@ -21,6 +21,13 @@ developer has chosen to stop.
   their machine manages software; offer the usual options (distribution
   package, nvm, Homebrew on macOS) and let them choose. On Debian and Ubuntu,
   npm is a package of its own.
+- For `compassion-design` (and the bundler, which brings it): `gh auth status`
+  shows them logged in to GitHub, and `gh repo view
+  CompassionCH/compassion-design --json name` answers. Not logged in: they run
+  `! gh auth login`. No access: Compassion Suisse IT grants it; until then
+  they pick plugins one by one, without `compassion-design`. Then, with their
+  yes, `gh auth setup-git`, so Claude Code can fetch the private repository
+  and update it in the background.
 
 ## 2. The marketplace
 
@@ -52,6 +59,9 @@ Show them the catalog and ask which they want:
   transactions, translations); brings code-rules with it
 - **translation-glossary**: Compassion's agreed words in each language, for
   translating interface strings or writing communications
+- **compassion-design**: Compassion's look for anything visual (colours,
+  type, layout, website components, icons, logos, the licensed fonts); needs
+  read access to its private repository (step 1)
 
 Tell them the trade-offs:
 
@@ -60,6 +70,8 @@ Tell them the trade-offs:
   `code-rules`, which `odoo-rules` needs.
 - To remove a plugin, first uninstall what depends on it: the bundler if they
   have it, and for `code-rules`, `odoo-rules` too.
+- The bundler includes `compassion-design`: without access to its repository,
+  the bundler may fail to install or stay disabled, so pick plugins one by one.
 
 With their yes, install their choice, for example:
 
@@ -142,6 +154,10 @@ In the repository they work on, with Claude Code started there:
 - translation-glossary: "How do we say 'sponsored child' in German and
   Polish?" → the agent opens `translation-glossary:glossary` and answers
   `Patenkind` and `Twoje dziecko` / `dziecko objęte patronatem`.
+- compassion-design: in a Compassion repository, "Which colour and weight do
+  page titles use in Compassion's design?" → the agent opens
+  `compassion-design:compassion-design` and answers Dark Blue `#11265E`,
+  bold.
 
 Close with the three habits: read every diff as if a colleague wrote it; give
 Claude a way to check itself (a test, the browser, the Odoo log); one task per

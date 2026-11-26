@@ -2,7 +2,8 @@
 
 Compassion Switzerland's shared setup for AI coding agents on our Odoo work,
 for **Claude Code**, plus a translation glossary for anyone writing in
-Compassion's languages. Two layers:
+Compassion's languages and Compassion's design system for anything visual.
+Two layers:
 
 1. **Guardrails, enforced for everyone** through managed settings: no reading
    credentials, no force-push.
@@ -19,6 +20,7 @@ Compassion's languages. Two layers:
 | `code-rules` | Compassion's code rules, one file per subject, opened only when a change needs it; records architecture decisions (ADRs); a read-only rules review before each PR |
 | `odoo-rules` | The Odoo rules on top of `code-rules`: access rights, side effects in transactions, translations. Installs `code-rules` too |
 | `translation-glossary` | Compassion's agreed words in each language (sponsorship, gifts, donations, form of address), for translating or writing interface text, letters, emails, newsletters and web copy. Also in the Claude desktop app, see [below](#translation-glossary-in-the-claude-desktop-app) |
+| `compassion-design` | Compassion's look for anything visual (websites, MyCompassion pages, emails, documents): colours, type, layout, every website component, icons, pictograms, logos and the licensed fonts. **Its repository is private**, see [below](#using-compassion-design) |
 
 The catalog is a common floor, not anyone's personal setup.
 
@@ -31,6 +33,9 @@ The catalog is a common floor, not anyone's personal setup.
 >   Ubuntu, npm is a package of its own)
 > - `assisted-by`: Node.js 18+
 > - `ticket`: Python 3 with `venv` (on Debian and Ubuntu, `python3-venv`)
+> - `compassion-design`: read access to the private
+>   `CompassionCH/compassion-design` repository (ask Compassion Suisse IT), and
+>   `gh auth login` then `gh auth setup-git` once, so Claude Code can fetch it
 >
 > A plugin missing its Node.js warns when a session starts.
 
@@ -70,6 +75,10 @@ The catalog is a common floor, not anyone's personal setup.
 
 ```
 /plugin install translation-glossary@compassion
+```
+
+```
+/plugin install compassion-design@compassion
 ```
 
 **Or let your agent do it.** Paste this into a new Claude Code session; it
@@ -196,6 +205,32 @@ chat, for example) it gives you the change as text for a maintainer.
   `translation-glossary` on its own. Install it directly: the bundler relies on
   plugin dependencies, which only Claude Code supports. Nothing else in the
   Install section applies there: no Claude Code, Node.js or restart needed.
+
+## Using `compassion-design`
+
+Ask for the page, the email or the document as usual ("build the donation
+page", "restyle this form"): in a Compassion project the agent opens the
+design on its own, or type `/compassion-design`. It holds Compassion's brand
+rules, the tokens with a script that writes them as CSS, SCSS or Tailwind,
+every website component with a reference image, and the licensed font files.
+
+- **Compassion work only.** The fonts are licensed to Compassion for its own
+  work. The skill first checks that the project is Compassion's and stops
+  otherwise; its font script copies the files only into repositories it can
+  confirm are private. Never commit them to a public repository, this one
+  included.
+- **Access:** the plugin lives in the private
+  `CompassionCH/compassion-design` repository. Claude Code fetches it with
+  your own GitHub access, through git's credential helper
+  (`gh auth setup-git`); without access it cannot install it, and the bundler
+  may then fail to install or stay disabled. Ask Compassion Suisse IT for
+  access, or meanwhile install the other plugins one by one.
+- **Updates** in the background need the same credential helper: without
+  it, the plugin quietly stays on its old version.
+- **Only in some repositories:** install it at project scope there (see
+  [Updates and changes](#updates-and-changes)), or switch it off in one
+  repository with `"compassion-design@compassion": false` under
+  `enabledPlugins` in its `.claude/settings.json`.
 
 ## find-docs and Context7
 
@@ -331,6 +366,11 @@ version bump, so Claude Code users receive it too.
 4. Add a row to the table above.
 
 One job per plugin, each useful on its own.
+
+**A plugin with licensed or private content** (fonts, logos, another team's
+material) lives in its own private repository and is listed here with a
+`github` source, as `compassion-design` is. Never copy its files into this
+public repository: its README, `AGENTS.md` and version live there.
 
 ## License
 
