@@ -156,8 +156,8 @@ In the repository they work on, with Claude Code started there:
   `Patenkind` and `Twoje dziecko` / `dziecko objęte patronatem`.
 - compassion-design: in a Compassion repository, "Which colour and weight do
   page titles use in Compassion's design?" → the agent opens
-  `compassion-design:compassion-design` and answers Dark Blue `#11265E`,
-  bold.
+  `compassion-design:compassion-design` and answers from its typography
+  reference.
 
 Close with the three habits: read every diff as if a colleague wrote it; give
 Claude a way to check itself (a test, the browser, the Odoo log); one task per

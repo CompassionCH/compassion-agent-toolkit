@@ -154,6 +154,12 @@ numbers.
 - **With the bundler, new plugins arrive on their own.** When a plugin joins
   the catalog, the bundler's update installs it; nothing to do. If you picked
   plugins one by one, install new ones from **Discover** when you want them.
+  - **Bundler 1.4 brings `compassion-design`,** from a private repository:
+    without read access to it, or without git credentials Claude Code can use
+    (`gh auth setup-git`), the update cannot fetch it, and the bundler may stop
+    loading. Get access and set up the credentials (see [Using
+    `compassion-design`](#using-compassion-design)), or uninstall the bundler
+    and keep its plugins (skip the `prune` it suggests).
 - **Remove or pause a plugin:** `/plugin` → **Installed** → **Uninstall** or
   **Disable**. Remove a plugin only after the plugins that depend on it: the
   bundler depends on all the others, and `odoo-rules` on `code-rules`.
@@ -216,9 +222,10 @@ every website component with a reference image, and the licensed font files.
 
 - **Compassion work only.** The fonts are licensed to Compassion for its own
   work. The skill first checks that the project is Compassion's and stops
-  otherwise; its font script copies the files only into repositories it can
-  confirm are private. Never commit them to a public repository, this one
-  included.
+  otherwise. Its font script refuses a repository with a public remote, and
+  one whose remotes it cannot confirm are private until you say they are; a
+  folder outside git or a repository without a remote is yours to keep
+  private. Never commit the fonts to a public repository, this one included.
 - **Access:** the plugin lives in the private
   `CompassionCH/compassion-design` repository. Claude Code fetches it with
   your own GitHub access, through git's credential helper
@@ -227,10 +234,15 @@ every website component with a reference image, and the licensed font files.
   access, or meanwhile install the other plugins one by one.
 - **Updates** in the background need the same credential helper: without
   it, the plugin quietly stays on its old version.
-- **Only in some repositories:** install it at project scope there (see
-  [Updates and changes](#updates-and-changes)), or switch it off in one
-  repository with `"compassion-design@compassion": false` under
-  `enabledPlugins` in its `.claude/settings.json`.
+- **Only in some repositories:** install it at project scope in each one
+  (`claude plugin install compassion-design@compassion --scope project`) and
+  commit `.claude/settings.json`. The committed setting does not download a
+  plugin from another repository: each colleague with access runs the same
+  command once in their clone.
+- **Switched off in one repository:** set `"compassion-design@compassion"` to
+  `false` under `enabledPlugins` in its `.claude/settings.json`; with the
+  bundler, set `"compassion-bundler@compassion"` to `false` there too, since a
+  bundler whose dependency is off does not load. The other plugins stay on.
 
 ## find-docs and Context7
 
